@@ -1,0 +1,214 @@
+#!/usr/bin/env python
+
+import gtk, gobject
+import shark
+
+class SharkWindow :
+    def __init__(self, shark=None) :
+        self.scale = 150
+        self.timeout = 600    # milliseconds
+
+        # Beat times for tail motors (milliseconds)
+        self.tailunit = 280
+        self.leftbeat = self.tailunit
+        self.rightbeat = self.tailunit
+        self.cur_direc = 0
+        # Where is the tail now? center: None, left: True, right: False
+        self.tailleft = None
+
+        # unit of change for the altitude setting (milliseconds)
+        self.altunit = 30
+
+        self.shark = shark
+
+        self.drawing_area = None
+        self.width = 0
+        self.height = 0
+        self.xgc = None
+        self.xgc_bg = None
+
+        # leftright and updown vary (user-controlled) between +/- self.scale/2
+        self.leftright = 0
+        self.updown = 0
+
+        # Where do we think the tail is pointed right now?
+        # True for left, False for right, None for center
+        self.tailleft = None
+
+    def change_direc(self, newright, newdown) :
+        """Change tail leftbeat and rightbeat according to direction changes.
+           Negative is more left, positive is more right.
+           Scaled from -self.scale/2 to self.scale/2.
+        """
+        #print "newright", newright, "newdown", newdown
+        # Change the tail beat values (will be sent in the timer func)
+        if newright == 0 :    # If we're centered now, straighten out
+            self.leftbeat = self.tailunit
+            self.rightbeat = self.tailunit
+
+        elif newright != self.cur_direc :
+            diff = newright - self.cur_direc
+            self.leftbeat = self.leftbeat - diff
+            if self.leftbeat < 0 : self.leftbeat = 0
+            self.rightbeat = self.rightbeat + diff
+            if self.rightbeat < 0 : self.rightbeat = 0
+
+            self.cur_direc = newright
+
+        # Send any changes of altitude now, not later in the timer func.
+        # But only do it if the alt change is significant;
+        # don't be glitching the alt control around for every pixel movement.
+        altdiff = newdown - self.updown
+        if abs(altdiff) >= 10 :
+            #print "previous updown", self.updown, "new", newdown
+            msec = self.altunit * abs(altdiff)
+            if altdiff > 0 :
+                self.shark_cmd('D', self.altunit * abs(altdiff))
+            elif altdiff < 0 :
+                self.shark_cmd('U', self.altunit * abs(altdiff))
+            self.updown = newdown
+
+    def timer_func(self, widget) :
+        #print "tick", self.leftright, self.updown
+
+        # Beat the tail according to leftright setting
+        if self.tailleft == None :      # tail is centered
+            self.shark_cmd('L', self.leftbeat / 2)
+            self.tailleft = True
+        elif self.tailleft == True :    # tail is already left
+            self.shark_cmd('R', self.rightbeat)
+            self.tailleft = False
+        else :                          # tail is right
+            self.shark_cmd('L', self.leftbeat)
+            self.tailleft = True
+
+        # Don't do any up/down controls here: they shouldn't be repeated.
+
+        return True
+
+    def shark_cmd(self, direc, msec) :
+        fmt = '%s %d'
+        s = fmt % (direc, msec)
+        #print s
+        if self.shark :
+            self.shark.send(s)
+
+    def clear_screen(self) :
+        self.drawing_area.window.draw_rectangle(self.xgc_bg, True, 0, 0,
+                                                self.width, self.height)
+        self.drawing_area.window.draw_line(self.xgc, 0, self.height/2,
+                                           self.width, self.height/2)
+        self.drawing_area.window.draw_line(self.xgc, self.width/2, 0,
+                                           self.width/2, self.height)
+
+    def configure_event(self, widget, event):
+        #print "configure notify"
+        self.width, self.height = self.drawing_area.window.get_size()
+
+        # Initialize the GC and xy values if this is the first time through:
+        if not self.xgc :
+            self.xgc = widget.window.new_gc()
+            self.xgc.set_rgb_fg_color(gtk.gdk.Color(65535, 65535, 0))
+            self.xgc_bg = widget.window.new_gc()
+            self.xgc_bg.set_rgb_fg_color(gtk.gdk.Color(0, 0, 0))
+
+        return True
+
+    def expose_handler(self, widget, event) :
+        #print "Expose!"
+        self.clear_screen()
+        return True
+
+    # Called whenever any key is pressed:
+    def key_press_event(self, widget, event) :
+        if event.string == "q" :
+            gtk.main_quit()
+
+    def move_to(self, x, y) :
+        self.clear_screen()
+        size = 30
+        self.drawing_area.window.draw_rectangle(self.xgc, True,
+                                                x - size/2, y - size/2,
+                                                size, size)
+        self.change_direc(int(x * self.scale / self.width) - self.scale/2,
+                          int(y * self.scale / self.height) - self.scale/2)
+
+        if self.shark :
+            pass
+
+    def button_press_event(self, widget, event):
+        if event.button != 1 :
+            return False
+
+        # For some reason, button press events give float arguments.
+        # draw_line won't accept floats.
+        self.move_to(int(event.x), int(event.y))
+        return True
+
+    def button_release_event(self, widget, event):
+        if event.button != 1 :
+            return False
+
+        self.move_to(int(event.x), int(event.y))
+        return True
+
+    def motion_notify_event(self, widget, event):
+        if event.is_hint:
+            x, y, state = event.window.get_pointer()
+        else:
+            x = event.x
+            y = event.y
+            state = event.state
+    
+        if not state & gtk.gdk.BUTTON1_MASK :
+            return False
+
+        self.move_to(int(event.x), int(event.y))
+        return True
+
+    def new_window(self) :
+        # Create the main window:
+        win = gtk.Window()
+
+        # Handle key events
+        win.connect("key-press-event", self.key_press_event)
+
+        # Create an area to draw in:
+        self.drawing_area = gtk.DrawingArea()
+        self.drawing_area.set_size_request(600, 400)
+        win.add(self.drawing_area)
+
+        # Mouse events
+        self.drawing_area.connect("motion_notify_event",
+                                  self.motion_notify_event)
+        self.drawing_area.connect("button_press_event", self.button_press_event)
+        self.drawing_area.connect("button_release_event",
+                                  self.button_release_event)
+
+        # Handle expose and window size changes
+        self.drawing_area.connect("expose-event", self.expose_handler)
+        self.drawing_area.connect("configure_event", self.configure_event)
+
+        self.drawing_area.set_events(gtk.gdk.EXPOSURE_MASK
+                                     | gtk.gdk.BUTTON_PRESS_MASK
+                                     | gtk.gdk.BUTTON_RELEASE_MASK
+                                     | gtk.gdk.POINTER_MOTION_MASK
+                                     | gtk.gdk.POINTER_MOTION_HINT_MASK)
+
+        # Obey the window manager quit signal:
+        win.connect("destroy", gtk.main_quit)
+
+        # set a timeout
+        gobject.timeout_add(self.timeout, self.timer_func, self.drawing_area)
+
+        self.drawing_area.show()
+        win.show()
+        gtk.main()
+
+try :
+    shark = shark.Sharkduino()
+except :
+    shark = None
+w = SharkWindow(shark)
+w.new_window()
+

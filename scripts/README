@@ -1,0 +1,9 @@
+Python scripts that aid in working with Arduinos.
+
+See also the air swimmers shark control scripts in the ../shark/ directory.
+
+ardmonitor: bidirectional serial communication with an Arduino.
+
+scopino: an oscilloscope that uses the optimized digital protocol
+  developed by Jonathan Oxer and Hugh Blemings
+  http://www.practicalarduino.com/projects/scope-logic-analyzer
