@@ -1,1 +1,7 @@
 This is a collection of small Arduino hacks.
+
+The Makefile at the top level of this directory is one that should
+work for any Arduino sketch. Just copy or symlink it into your
+sketch directory and make sure the sketch has the same name as
+the directory (e.g. blink/blink.ino).
+
