@@ -1,1 +1,13 @@
-A series of experiments in generating music with an Arduino.
+A series of tests/experiments in generating music with an Arduino.
+
+random: just play random tones within a set frequency range.
+
+rising: rise from a low note to a high note.
+
+theremin: adjust frequency according to a photoresistor on analog pin 0.
+
+chiptunes: play random tunes, given a C major scale and a few simple rules.
+
+bach-invention: play the beginning of Bach's 2-part invention #4 in D minor.
+  An experiment in how to specify tunes consisting of specific notes.
+
