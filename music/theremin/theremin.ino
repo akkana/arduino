@@ -8,59 +8,40 @@ uint8_t SPEAKER = 8;
 // which analog pin is the light sensor on?
 uint8_t LIGHTSENSOR = 0;
 
-void buzz(long frequency, long length)
-{
-    long delayValue = 1000000/frequency/2;
-    /* calculate the delay value between transitions:
-     * 1 second's worth of microseconds, divided by the frequency,
-     * then split in half since there are two phases to each cycle.
-     */
-    long numCycles = frequency * length / 1000;
-
-    for (long i=0; i < numCycles; i++) { // for the calculated length of time...
-        digitalWrite(SPEAKER, HIGH);
-        delayMicroseconds(delayValue);
-        digitalWrite(SPEAKER, LOW);
-        delayMicroseconds(delayValue);
-    }
-}
-
 void setup()
 {
     pinMode(SPEAKER, OUTPUT);
 
-    //Serial.begin(9600);
+//#define SERIAL_DEBUG 1
+#ifdef SERIAL_DEBUG
+    Serial.begin(9600);
+#endif
 }
 
 unsigned int freq = 20;
 void loop()
 {
-    /*
-    */
-    if (freq > 20000) {
-        delay(2000);
-        freq = 20;
-    }
-
     // Set the frequency according to the light value read off analog pin 0.
-    // Typical Light sensor values:
+    // Typical night/indoor Light sensor values:
     // 110-290 (low light), 490 (room light), 980 (direct flashlight).
+    // Typical for daytime with window:
+    // 325 (hand over sensor), 790 (sunlight through window)
     // Want frequency between 100 and 10000 (Hz).
+#define MAX_SIGNAL 800  /* 1024 */
+#define MAX_FREQ  5000
+#define MIN_SIGNAL  380 /* 100 */
+#define MIN_FREQ    20
     int lightsensor = analogRead(LIGHTSENSOR);
-    if (lightsensor < 150) lightsensor = 150;
-    freq = (lightsensor - 150) * 13000.0 / 400;
+    freq = (lightsensor - MIN_SIGNAL) * (float)(MAX_FREQ - MIN_FREQ) / (MAX_SIGNAL - MIN_SIGNAL) + MIN_FREQ;
 
-    /*
+    tone(SPEAKER, freq);
+
+#ifdef SERIAL_DEBUG
     Serial.print("Read ");
     Serial.print(lightsensor);
     Serial.print(" -> ");
     Serial.println(freq);
-    */
-
-    //buzz(freq, 20);
-    tone(SPEAKER, freq);
-    //delay(200);
-
-    //freq = (int)(freq * 1.05);
+    delay(200);
+#endif
 }
 
