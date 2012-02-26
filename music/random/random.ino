@@ -8,6 +8,9 @@ uint8_t SPEAKER = 8;
 void setup()
 {
     pinMode(SPEAKER, OUTPUT);
+
+    // Seed the random number generator from floating analog pin 0:
+    randomSeed(analogRead(0));
 }
 
 void loop()
