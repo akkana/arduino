@@ -13,6 +13,21 @@ int steerSpeed = 200;
 int backingTime = 2500; // msec
 
 ////////////////////////////////////////////////////////////
+// WIRING (a proto-shield is useful):
+// Side 1, input:
+//   Gnd to ground
+//   STDBY to pin 7 or V+
+//   PWMA 9   AIN1 2  AIN2 3
+//   PWMB 10  BIN1 4  BIN2 5
+//   
+// Side 2:
+//   wire both GND pins to Gnd
+//   VMOT to motor power supply
+//   VCC to Arduino V+
+//   Motors into AO1, AO2, BO1, BO2
+//  
+
+////////////////////////////////////////////////////////////
 // Some generic code for handling the motor driver:
 
 // Motor pins
