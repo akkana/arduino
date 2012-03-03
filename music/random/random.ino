@@ -17,7 +17,7 @@ void loop()
 {
     // Random frequency between 100 and 10000 (Hz).
     unsigned long freq = random(20, 1400);
-    long len = random(5, 50);
+    long duration = random(5, 50);
 
     tone(SPEAKER, freq, len);
     delay(random(100, 300));
