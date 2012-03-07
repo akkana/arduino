@@ -19,7 +19,7 @@ void loop()
     unsigned long freq = random(20, 1400);
     long duration = random(5, 50);
 
-    tone(SPEAKER, freq, len);
+    tone(SPEAKER, freq, duration);
     delay(random(100, 300));
 }
 
