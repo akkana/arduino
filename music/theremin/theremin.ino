@@ -3,7 +3,7 @@
  */
 
 // what digital pin is the speaker on? (other speaker wire is Gnd.)
-uint8_t SPEAKER = 8;
+uint8_t SPEAKER = 10;
 
 // which analog pin is the light sensor on?
 uint8_t LIGHTSENSOR = 0;
@@ -18,7 +18,6 @@ void setup()
 #endif
 }
 
-unsigned int freq = 20;
 void loop()
 {
     // Set the frequency according to the light value read off analog pin 0.
@@ -27,12 +26,15 @@ void loop()
     // Typical for daytime with window:
     // 325 (hand over sensor), 790 (sunlight through window)
     // Want frequency between 100 and 10000 (Hz).
-#define MAX_SIGNAL 800  /* 1024 */
-#define MAX_FREQ  5000
-#define MIN_SIGNAL  380 /* 100 */
-#define MIN_FREQ    20
+#define MIN_FREQ    100
+#define MAX_FREQ   6000
+#define MIN_SIGNAL  100  /* 100 */
+#define MAX_SIGNAL  512  /* 1024 */
+
     int lightsensor = analogRead(LIGHTSENSOR);
-    freq = (lightsensor - MIN_SIGNAL) * (float)(MAX_FREQ - MIN_FREQ) / (MAX_SIGNAL - MIN_SIGNAL) + MIN_FREQ;
+    unsigned int freq = map(lightsensor,
+                            MIN_SIGNAL, MAX_SIGNAL,
+                            MIN_FREQ, MAX_FREQ);
 
     tone(SPEAKER, freq);
 
