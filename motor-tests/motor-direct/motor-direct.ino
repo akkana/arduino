@@ -4,10 +4,12 @@
  * Arduino basic motor control
  */
 
-#define DELAYTIME   1000      // milliseconds
+#define DELAYTIME   1500       // milliseconds
 
-int motorPins[2] = { 5, 6 };  // plug the motor leads into these pins
-int direction = 0;            // toggle between 0 and 1
+int motorPins[2] = { 9, 10 };  // plug the motor leads into these pins
+int direction = 0;             // toggle between 0 and 1
+
+int speed = 180;
 
 void setup()
 {
@@ -24,11 +26,13 @@ void loop()
 {
     delay(DELAYTIME);
 
-    digitalWrite(motorPins[direction], HIGH);
+    //digitalWrite(motorPins[direction], HIGH);
+    analogWrite(motorPins[direction], speed);
 
     delay(DELAYTIME);
 
     digitalWrite(motorPins[direction], LOW);
+    //analogWrite(motorPins[direction], 0);
 
     direction = !direction;
 }
