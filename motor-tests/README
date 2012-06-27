@@ -1,1 +1,6 @@
 Sketches to drive motors from an Arduino in lots of different ways.
+
+2-wheel-drive: drive motors through a L293NE or SN754410 H-bridge chip.
+
+halfbridge: Library and sample code to make it much easier to drive
+            2 motors with a quad half-bridge chip.
