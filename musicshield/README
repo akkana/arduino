@@ -1,0 +1,99 @@
+This is code to run a Seeed Studio music shield,
+http://seeedstudio.com/wiki/Music_Shield_V1.0
+
+It uses (apparently) a VS1053b IC to play MP3, WAV, MIDI and Ogg Vorbis.
+(I've only tried MP3 and WAV so far; I'll try an OGG soon.)
+It supposedly can record too, but only on an Arduino Mega,
+which I don't have, so I know nothing about that.
+
+Warning before you get started: the Seeed library code is a mess, and
+you'll probably have to hack it quite a bit to do anything specific.
+Also, be warned that the music shield only works with 2G or smaller
+micro SD cards. This is not mentioned anywhere on their site, and
+good luck in finding one locally. They're still available via mail
+order; I'm going to order several to keep around in case my current
+one dies, or so I can use the music shield for different applications.
+
+The shield hardware actually seems pretty nice (two pushbuttons and a
+multifunction button) aside from the annoying SD card limitation.
+Too bad about the software and documentation.
+
+The code here is mostly adapted from the Music v1 14.zip library
+at http://seeedstudio.com/wiki/File:Music_v1_14.zip (linked from
+the wiki page referenced above).
+The Seeed code says:
+<code>Copyright (c) 2010 Seedstudio.  All right reserved.</code>
+So I guess that means I can't share my version directly.
+
+So instead, I'm distributing patches to turn their library
+into something that worked for me. I asked them if it would be
+possible to release their code under a license that allows
+redistribution, but never got an answer:
+http://www.seeedstudio.com/forum/viewtopic.php?f=16&t=2996&p=15968#p15968
+
+Once I've applied the patches, I named the resulting library
+musicshield-lib in my Arduino sketches/lib.
+So my demo, play-repeat, uses the library under that name.
+
+The Seeed library has no documentation on how to use it, and only one
+example, which plays all songs on the SD card in the order they appear
+there. My changes so far mostly involve being able to play individual
+songs and return after the song has finished playing, so you can play
+a different song, repeat that song, or play songs in a different order
+than their order on the SD card. My specific use case, play-repeat,
+plays a track over and over, but lets you skip to the next or previous
+track using the multifunction button on the shield. I use it to play
+pink noise to mask out other noises at night.
+
+In addition to making it possible to play specific songs or repeat
+the same song (instead of just playing songs one after another in order),
+my patch also adds a lot of debugging output (optional, if DEBUG is
+defined) to help with tracing events.
+
+There are various other libraries floating around for this shield.
+Seeed themselves have at least 4 different versions, all completely
+incompatible  (to the extent that their names overlap so you can't have
+them installed simultaneously) and doing different things, though
+1_14 is the only one that does anything at all for me; none of the
+others can read the SD card at all. There's also some suggestion that
+https://github.com/amperka/music-shield and
+https://github.com/rodan/playa are intended to work with this hardware
+(not that either of them says), but neither of those worked for me.
+
+My main test, at this point, is play-repeat.
+The Seeed wiki page says that you need NewSoftSerial to use the Music v1 14
+demo, but that's only for the ipod dock communication code, which I
+removed because I don't have an ipod dock and the code was causing
+other problems. So I removed it. I think musicshield-lib even has the
+SD/FAT code it needs -- at least, I'm not importing any additional
+Fat16 or SD libraries. (This is one of the things that makes the code
+so hard to debug or modify: it does a lot of fiddling with FAT
+sectors, supposedly because that's faster than using the higher-level
+routines in libraries.)
+
+I am in the process of trying to refactor the library so it will be
+more usable for general purpose music playing. Once that happens, I'll
+write a little documentation on it in the hope that it helps someone
+(or me, the next time I try to write a app that uses it).
+
+Here's what you might want to know so far:
+
+Initialize like this:
+    InitSPI();
+    InitIOForVs10xx();
+    InitIOForKeys();
+    InitIOForLEDs();
+    InitFileSystem();
+    Mp3Reset();
+
+To play a particular track (by number on the SD card):
+
+    currentFile = 5;
+    while ((rv = OpenFile(currentFile))) {
+        ++currentFile;    // Skip files that couldn't be opened
+    }
+    // Now we have an opened file. Play it.
+    PlayCurrentFile();
+
+currentFile is a global variable used by the library.
+

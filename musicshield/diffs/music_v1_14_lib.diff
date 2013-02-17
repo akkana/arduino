@@ -1,0 +1,664 @@
+Only in musicshield-lib/: debug.h
+diff -u music_v1_14/filesys.cpp musicshield-lib/filesys.cpp
+--- music_v1_14/filesys.cpp	2013-01-23 19:42:39.504170396 -0800
++++ musicshield-lib/filesys.cpp	2013-01-27 12:42:20.662869327 -0800
+@@ -1,3 +1,4 @@
++#include "debug.h"
+ 
+ #include "Arduino.h"
+ #include "filesys.h"
+@@ -113,19 +114,25 @@
+   
+    /* Initialize the storage system */
+   if ((c=InitStorage())){
+-    //Serial.print("\r\nStorage init returns error \r\n");
+-    //Serial.print((int)c);
++#ifdef DEBUG
++    PRINT("\r\nStorage init returns error \r\n");
++    Serial.println((int)c);
++#endif
+     return c; /* Error in InitStorage */
+   }
+ 
+-  //Serial.print("Storage ok.\r\nSector 0 read...");
++#ifdef DEBUG
++  PRINT("Storage ok.\r\nSector 0 read...");
++#endif
+ 
+   /* Load MBR */
+   sectorAddress.l = 0; /* the first sector on disk */
+   ReadDiskSector(0);
+ 
+ 
+-  //Serial.print("ok.\r\nSector signature...");
++#ifdef DEBUG
++  PRINT("ok.\r\nSector signature...");
++#endif
+ 
+   /* Ok, it should be a MBR sector. Let's verify */
+   if (diskSect.raw.buf[510] != 0x55)
+@@ -133,7 +140,9 @@
+   if (diskSect.raw.buf[511] != 0xaa)
+     return 8; /* sector 0 is not MBR. */
+ 
+-  //Serial.print("ok.\r\nPartition 1...");
++#ifdef DEBUG
++  PRINT("ok.\r\nPartition 1...");
++#endif
+ 
+   if (!((diskSect.raw.buf[0x036]=='F')
+       &&(diskSect.raw.buf[0x037]=='A')
+@@ -147,7 +156,9 @@
+       	sectorAddress.b.b1 = diskSect.raw.buf[0x1c7];
+       	sectorAddress.b.b2 = diskSect.raw.buf[0x1c8];
+       	sectorAddress.b.b3 = diskSect.raw.buf[0x1c9];
+-      	//Serial.print (" active");
++#ifdef DEBUG
++      	PRINT (" active");
++#endif
+     	}
+ 		else
+ 		{
+@@ -162,15 +173,18 @@
+     	//    return 9; /* No active partition*/
+   	}
+ 
+-  //Serial.print(" at sector ");
+-  //Serial.print(sectorAddress.l,HEX);
+-  //Serial.print('\n');
+-
++#ifdef DEBUG
++  PRINT(" at sector ");
++  Serial.println(sectorAddress.l,HEX);
++#endif
+ 
+   /* Now leave MBR and load sector 0 of partition */
+   ReadDiskSector(sectorAddress.l);
+ 
+   if (FatInitGlobals()){
++    // Uncommenting this particular println prevents music from playing.
++    // I have no idea why.
++    //PRINTln("FAT init failed");
+     return 0x0a; /* FAT init failed */
+   }
+   return 0;
+@@ -211,29 +225,29 @@
+ memcpy(	fatInfo.ext._16.BS_VolLab, &diskSect.raw.buf[0x2b],11);	
+   memcpy(fatInfo.ext._16.BS_FilSysType, &diskSect.raw.buf[0x36],8);	
+   /*	
+-  Serial.print("\r\nFormatter signature:\r\n");
++  PRINT("\r\nFormatter signature:\r\n");
+   for (temp.c=0; temp.c<8; temp.c++)
+   {
+     Serial.print(diskSect.fat.BS_OEMName[temp.c]);
+   }
+ 
+-  Serial.print("\r\nBytes per sector: ");
++  PRINT("\r\nBytes per sector: ");
+   Serial.print(fatInfo.BPB_BytsPerSec);
+-  Serial.print("\r\nSectors per Cluster: ");
++  PRINT("\r\nSectors per Cluster: ");
+   Serial.print(fatInfo.BPB_SecPerClus,DEC);
+-  Serial.print("\r\nReserved sectors: ");
++  PRINT("\r\nReserved sectors: ");
+   Serial.print(fatInfo.BPB_RsvdSecCnt);
+-  Serial.print("\r\nNumber of FATs: ");
++  PRINT("\r\nNumber of FATs: ");
+   Serial.print(fatInfo.BPB_NumFATs,DEC);
+-  Serial.print("\r\nRoot entries: ");
++  PRINT("\r\nRoot entries: ");
+   Serial.print(fatInfo.BPB_RootEntCnt);
+-  Serial.print("\r\nTotal Sectors 16: ");
++  PRINT("\r\nTotal Sectors 16: ");
+   Serial.print(fatInfo.BPB_TotSec16);
+-  Serial.print("\r\nFat Size 16: ");
++  PRINT("\r\nFat Size 16: ");
+   Serial.print(fatInfo.BPB_FATSz16);
+-  Serial.print("\r\nHidden Sectors: ");
++  PRINT("\r\nHidden Sectors: ");
+   Serial.print(fatInfo.BPB_HiddSec);
+-  Serial.print("\r\nTotal Sectors 32: ");
++  PRINT("\r\nTotal Sectors 32: ");
+   Serial.print(fatInfo.BPB_TotSec32);
+   */
+ 
+@@ -244,14 +258,14 @@
+   if (fatInfo.BPB_RootEntCnt) 
+     IS_FAT_32 = 0; /* FAT32 does not have separate root entries. */
+   
+-  //Serial.print("\r\nFile system is ");
++  //PRINT("\r\nFile system is ");
+   if (IS_FAT_32){
+-    //Serial.print("FAT32\r\n");
++    //PRINT("FAT32\r\n");
+   } else {
+-    //Serial.print("FAT16\r\n");
++    //PRINT("FAT16\r\n");
+   }
+ 
+-  //Serial.print("\r\nFile system signature is ");
++  //PRINT("\r\nFile system signature is ");
+   for (temp.c=0;temp. c<8; temp.c++)
+     if (IS_FAT_32){
+       //Serial.print(diskSect.fat.ext._32.BS_FilSysType[temp.c]);
+@@ -267,7 +281,7 @@
+   }    
+   
+ 
+-  //Serial.print("\r\nVolume Label is ");
++  //PRINT("\r\nVolume Label is ");
+   for (temp.c=0; temp.c<11; temp.c++)
+     if (IS_FAT_32){
+       //Serial.print(diskSect.fat.ext._32.BS_VolLab[temp.c]);
+@@ -291,15 +305,19 @@
+     fatInfo.BPB_SecPerClus *= fatInfo.BPB_BytsPerSec;
+   /* Note: BPB_BytsPerSec has already been divided by 512 */  
+ 
+-  Serial.print("\r\nSectors per Cluster: ");
++#ifdef DEBUG
++  PRINT("\r\nSectors per Cluster: ");
+   Serial.print(fatSectorsPerCluster,DEC);
+-  
++#endif
++
+   fatStart = (unsigned long)sectorAddress.l
+     + (unsigned long)fatInfo.BPB_RsvdSecCnt 
+     * (unsigned long)fatInfo.BPB_BytsPerSec;
+ 
+-  Serial.print("\r\nFAT Start sector: ");
++#ifdef DEBUG
++  PRINT("\r\nFAT Start sector: ");
+   Serial.print(fatStart);
++#endif
+ 
+   rootStart = fatInfo.BPB_FATSz16;
+   if (rootStart==0){
+@@ -311,15 +329,19 @@
+   rootStart *= fatInfo.BPB_BytsPerSec; /* ADJUSTED BytsPerSec! */
+   rootStart += fatStart;
+ 
+-  Serial.print("\r\nRoot start sector: ");
+-  Serial.print(rootStart);
++#ifdef DEBUG
++  PRINT("\r\nRoot start sector: ");
++  Serial.println(rootStart);
++#endif
+ 
+   dataStart = fatInfo.BPB_RootEntCnt >> 4;//???512/16 = 32
+   dataStart += rootStart;
+   dataStart -= (fatSectorsPerCluster*2); /*first cluster is cluster 2*/
+ 
+-  Serial.print("\r\nData start sector: ");
+-  Serial.print(dataStart);
++#ifdef DEBUG
++  PRINT("\r\nData start sector: ");
++  Serial.println(dataStart);
++#endif
+ 
+   return 0;
+ }
+@@ -350,10 +372,12 @@
+ {
+ 	  char tempc;
+ 
+-  //Serial.print("\r\nFilesystem: Looking for file ");
+-  //Serial.print(fileNumber,DEC);
+-  //Serial.print("...\r\n ");
+-  
++#ifdef DEBUG
++  PRINT("\r\nFilesystem: Looking for file ");
++  Serial.print(fileNumber,DEC);
++  PRINT("...\r\n ");
++#endif
++
+   /* Start at the start of root directory. */
+   dirLevel = 0; /* At root directory */
+   dirStack[dirLevel].sector=rootStart;
+@@ -367,7 +391,9 @@
+     if (dirStack[dirLevel].entry==0){
+       /* At the start of new dir, load first disk sector */
+       while (ReadDiskSector(dirStack[dirLevel].sector)){
+-		InitMMC();//origin is InitMMC ???
++          // This is another place where you can't put a PRINTln:
++          // it breaks any ability to read the SD card after that.
++          InitMMC();//origin is InitMMC ???
+       }
+     }
+     temp.c = dirStack[dirLevel].entry;
+@@ -406,7 +432,9 @@
+ 	diskSect.dir[temp.c].entry.FstClusLo = (fragment[0].start & 0xffff);
+ 	diskSect.dir[temp.c].entry.FileSize = (fragment[0].length);
+ 
+-	Serial.println(" \r\nMaking Directory Entry");
++#ifdef DEBUG
++	PRINTln(" \r\nMaking Directory Entry");
++#endif
+ 	WriteDiskSector(sectorAddress.l);
+ 	
+ 	return 99; //created a FAT entry
+@@ -434,11 +462,13 @@
+ 	fileSize = diskSect.dir[temp.c].entry.FileSize;
+       	dataBufPtr = 0; /* Reset data buffer ptr for FGetChar */
+ 
+-	Serial.print("\r\n\r\nFound file name is ");
++#ifdef DEBUG
++	//Serial.print("\r\n\r\nFound file name is ");
+        	//for (tempc=0; tempc<11; tempc++){
+-	  //Serial.print(diskSect.dir[temp.c].entry.Name[tempc]);
++	  //PRINT(diskSect.dir[temp.c].entry.Name[tempc]);
+ 	//}
+-	Serial.write(diskSect.dir[temp.c].entry.Name,11);
++	//Serial.write(diskSect.dir[temp.c].entry.Name,11);
++#endif
+ 
+ 	//Store file name nicely for displaying on screen :)
+        	for (tempc=0; tempc<8; tempc++){
+@@ -452,18 +482,23 @@
+ 	////for (tempc=0; tempc<12; tempc++){
+ 	  ///displayText[tempc+1]=currentFileName[tempc];
+ 	///}
++#ifdef DEBUG
++        PRINT("\nPrettified file name is ");
++        Serial.write((uint8_t*)currentFileName, 12);
++        PRINTln(" ");
+ 
+-	Serial.print("\r\nFile size: ");
++	PRINT("\r\nFile size: ");
+ 	Serial.print(fileSize,DEC);
+-	Serial.print("bytes. \r\n");
++	PRINT(" bytes. \r\n");
+ 
+-	/*Serial.print("Start cluster: ");
++	/*PRINT("Start cluster: ");
+ 	Serial.print(diskSect.dir[temp.c].entry.FstClusHi,HEX);
+  	Serial.print(diskSect.dir[temp.c].entry.FstClusLo,HEX);
+-	Serial.print("h, sector ");
++	PRINT("h, sector ");
+ 	Serial.print(sectorAddress.l,DEC);
+-	Serial.print("decimal.\r\n");
++	PRINT("decimal.\r\n");
+ 	*/
++#endif
+ 	return 0; /* File found, All OK return */
+       }
+     } /* it was a regular file */
+@@ -503,7 +538,9 @@
+       /* Is it the end of root directory? */
+       if (dirLevel == 0){
+ 	/* End of root directory, end of all files in volume */
+-	Serial.print("\r\nFile not found.\r\n");
++#ifdef DEBUG
++	PRINT("\r\nFile not found.\r\n");
++#endif
+ 	sectorAddress.l = dataStart; 
+ 	/* when in error point to start of data */
+ 	return 0x0c; /* File Not Found return */
+@@ -571,7 +608,9 @@
+ 
+ 
+   if (IS_FAT_12){
+-    Serial.print("\r\nSingle fragment support for FAT12\r\n");
++#ifdef DEBUG
++    PRINT("\r\nSingle fragment support for FAT12\r\n");
++#endif
+     fragment[0].start = sectorAddress.l;
+     fragment[0].length = fileSize/512;
+     return(1); //Return 1 fragment
+@@ -619,11 +658,13 @@
+     /* next.l is the FAT entry (next cluster number) */
+     
+     
+-    /*Serial.print("Fragment start: cluster ");
++#ifdef DEBUG
++    /*PRINT("Fragment start: cluster ");
+     Serial.print(cthis.l,HEX);
+-    Serial.print(", sector ");
++    PRINT(", sector ");
+     Serial.print(fragment[c].start,DEC);
+ 	*/
++#endif
+     while (next.l==(cthis.l+1)){
+       //Not a fragment break -- continue to next entry 
+ 
+@@ -669,15 +710,19 @@
+ 	if( fragment[c].length > (fileSize>>9))
+     fragment[c].length = (fileSize>>9)+1;//aim to reduce unessary track data--add by Icing, 
+     
+-    /*Serial.print("\r\nSize: ");
++#ifdef DEBUG
++    /*PRINT("\r\nSize: ");
+     Serial.print(fragment[c].length<<9,DEC);
+-    Serial.println("sectors.");
++    PRINTln("sectors.");
+ 	*/
++#endif
+     //EOF test
+     if ((next.b.b3&0x08) //Quick test
+ 	&& ((next.l>0x0ffffff0) | !IS_FAT_32)){ //Complete test
+       //EOF
+-      //Serial.print(" <EOF>\r\n");
++#ifdef DEBUG
++      //PRINT(" <EOF>\r\n");
++#endif
+       sectorAddress.b.b3 = 0xff;
+     }else{
+       
+@@ -750,8 +795,9 @@
+     sectorAddress.l = fatSector.l; /* (not needed because mmc.c does this) */
+     ReadDiskSector(fatSector.l);
+     
+-    Serial.print('n');
+-    
++#ifdef DEBUG
++    PRINT("n");
++#endif    
+     
+   }
+   /* Now there should be correct FAT entry page in memory... */
+@@ -894,11 +940,12 @@
+   }
+   fatPageSector += fatStart;
+      
+-  Serial.print("\r\nWriting clusterchain from: "); Serial.print(currentCluster,DEC);
+-  Serial.print("\r\nFragment size (sectors): "); Serial.print(fragSize),DEC;
+-  Serial.print("\r\nFatPageSector: "); Serial.print(fatPageSector,DEC);
+-  Serial.print("\r\nEntryNumber: "); Serial.print(entryNumber,DEC);
+-
++#ifdef DEBUG
++  PRINT("\r\nWriting clusterchain from: "); Serial.print(currentCluster,DEC);
++  PRINT("\r\nFragment size (sectors): "); Serial.print(fragSize),DEC;
++  PRINT("\r\nFatPageSector: "); Serial.print(fatPageSector,DEC);
++  PRINT("\r\nEntryNumber: "); Serial.print(entryNumber,DEC);
++#endif
+   
+   // WRITE CLUSTER CHAIN TO FIRST FAT
+ 
+diff -u music_v1_14/player.cpp musicshield-lib/player.cpp
+--- music_v1_14/player.cpp	2010-08-31 15:09:18.000000000 -0700
++++ musicshield-lib/player.cpp	2013-01-27 12:52:09.062879785 -0800
+@@ -1,3 +1,5 @@
++#include "debug.h"
++
+ #include "filesys.h"
+ #include "storage.h"
+ #include "string.h"
+@@ -6,9 +8,6 @@
+ #include "config.h"
+ #include "ui.h"
+ #include "vs10xx.h"
+-#include "NewSoftSerial.h"
+-
+-extern NewSoftSerial mySerial;
+ 
+ /** Playing State Global */
+  playingstatetype playingState = PS_NORMAL;
+@@ -30,24 +29,41 @@
+   ///LcdLocateHome();
+   ///LcdPutConstantString("Opening ");
+ 
+-  //Serial.print("\r\nBuilding file fragment table...");
++#ifdef DEBUG
++  //PRINTln("\r\nBuilding file fragment table...");
++#endif
+ 
+   //sectorAddress.l = album[currentAlbumCnt].track[currentFile].trackAddr.l;
+   delay(100);//delay here is very important, give some time to sd card.---by Icing
+   nFragments = BuildFragmentTable(); /* Too slow, rewrite! */
+-  //Serial.print("Fragments: ");
+-  //Serial.print(nFragments,DEC);
++#ifdef DEBUG
++  PRINT("Fragments: ");
++  Serial.println(nFragments,DEC);
++#endif
+ 
+   ///LcdLocateHome();
+   ///LcdPutConstantString("Playing ");
+ 
++#ifdef DEBUG
++  PRINT("PlayCurrentFile: about to start the loop. nFragments = ");
++  Serial.println(nFragments, DEC);
++#endif
++
+   for (c=0; c<nFragments; c++){
++#ifdef DEBUG
++    PRINT("PlayCurrentFile: Getting a new fragment of length ");
++    Serial.println(fragment[c].length);
++    PRINT("currentFile = "); Serial.println(currentFile);
++#endif
+     sectorAddress.l = fragment[c].start;
+     //ConsoleWrite ("\r\nPlayer: Playing from sector ");
+     //ConsolePutUInt (sectorAddress.l);
+     if (PlayDiskSectors(fragment[c].length)!=0){
+       Mp3WriteRegister(SPI_MODE,0,SM_OUTOFWAV);
+       SendZerosToVS10xx();
++#ifdef DEBUG
++      PRINT("PlayCurrentFile: returning (done?)");
++#endif
+       return; //return without touching the value of playingState
+     }
+   }
+@@ -90,11 +106,13 @@
+ 
+ void CheckKey()
+ {
++#ifdef DEBUG
++  PRINT("CheckKey called");
++#endif
+   //static unsigned char volume = 40;
+   static unsigned int vu_cnt = 1000;//volume up interval
+   static unsigned int vd_cnt = 1000;//volume down interval
+ 
+-  
+   if(0 == PSKey)
+   {
+   	playStop = 1-playStop;
+@@ -103,7 +121,6 @@
+ 	delay(20);
+ 
+   }
+-  
+ 
+   if(0 == NTKey)
+   {
+@@ -126,18 +143,6 @@
+     		if (g_volume-- == 0) g_volume = 0; //Change + limit to 0 (maximum volume)
+     
+ 		Mp3SetVolume(g_volume,g_volume);		
+-
+-		redPwm = (175-g_volume)*3>>1;
+-		if(redPwm >255)
+-		{
+-			redPwm = 255;
+-		}
+-		if(redPwm < 0)
+-		{
+-			redPwm = 0;
+-		}
+-		
+-		//Serial.println(redPwm,DEC);
+ 		vu_cnt = 1000;
+ 	 }
+   }
+@@ -158,7 +163,9 @@
+ 		{
+ 			redPwm = 0;
+ 		}
++#ifdef DEBUG
+ 		//Serial.println(redPwm,DEC);
++#endif
+ 	  	vd_cnt = 1000;
+ 	 }
+        	         
+@@ -167,84 +174,26 @@
+   
+ }
+ 
+-void IPODCommandProcess()
+-{
+-	if(mySerial.available())
+-	{
+-		delay(10);
+-
+-		int cmdBuffer[40];
+-		int len = mySerial.available();
+-		int i = 0;
+-		Serial.print(len,HEX);
+-		while(len--)
+-		{
+-			cmdBuffer[i++] = mySerial.read();
+-			//Serial.print(cmdBuffer[i-1],HEX);
+-		}
+-		
+-		if(0xff == cmdBuffer[0] && 0x55 == cmdBuffer[1] && 0x03 == cmdBuffer[2]  && 0x02 == cmdBuffer[3])
+-		{
+-			switch (cmdBuffer[5])
+-			{
+-				case 0x01:playStop = 1-playStop;break;
+-				case 0x02:if (g_volume-- == 0) g_volume = 0;Mp3SetVolume(g_volume,g_volume);break;
+-				case 0x04:if (g_volume++ == 254) g_volume = 254;Mp3SetVolume(g_volume,g_volume);break;
+-				case 0x08:playingState = PS_NEXT_SONG;break;
+-				case 0x10:playingState = PS_PREVIOUS_SONG;break;				
+-				case 0x20:playingState = PS_NEXT_SONG;break;//it should be next Album
+-				case 0x40:playingState = PS_PREVIOUS_SONG;break;//it shuld be previous Album
+-				case 0x80:playStop = 1-playStop;break;
+-				default: break;
+-			}
+-
+-			//wait remote button release
+-			unsigned char continueZeros = 0;
+-			while(1)
+-			{
+-				if(mySerial.available())
+-				{
+-					if(mySerial.read() == 0)
+-					{
+-						continueZeros++;
+-						//Serial.print(continueZeros,DEC);
+-						if(5 == continueZeros)
+-							break;
+-					}
+-					else
+-					{
+-						continueZeros = 0;
+-					}
+-				}
+-			}
+-			
+-		}
+-	}
+-}
+-
+-
+ /** This function is called when the player is playing a song
+  and there is free processor time. The basic task of this
+  function is to implement the player user interface. */
++#if 0
+ void AvailableProcessorTime()
+ {
+-	
+ 	do
+ 	{
+-  		CheckKey();
++                CheckKey();
+   
+- 		 IPODCommandProcess();
+-		 
+ 		if(0 == playStop)
+ 		{
+ 			GREEN_LED_ON();
+ 		}	
+ 	}while(0 == playStop);
+-	
++
+   	//do other things
+ 	ControlLed();
+-	
+ }
++#endif
+ 
+ void Play()
+ {
+@@ -252,12 +201,9 @@
+ 
+   currentFile = 1;
+ 
+-  
+   //cyclely play 
+   while(1)
+   {
+-
+-	 //CheckPlay();
+ 	 //CheckKey();
+ 	 AvailableProcessorTime();
+ 	 
+@@ -283,4 +229,4 @@
+ 		Mp3SoftReset();
+ 	 }
+   }
+-}
++}
+diff -u music_v1_14/player.h musicshield-lib/player.h
+--- music_v1_14/player.h	2013-01-23 19:40:59.672168709 -0800
++++ musicshield-lib/player.h	2013-01-27 12:52:58.782884229 -0800
+@@ -14,5 +14,12 @@
+ //void CheckPlay();
+ void CheckKey();
+ 
++// Other things callers might want to control:
++extern void PlayCurrentFile();
++extern void ControlLed();
++extern unsigned char g_volume;
++extern int redPwm;             // brightness of red led
++extern unsigned int greenFreq; // flash frequency of green led
++
+ #endif
+ 
+diff -u music_v1_14/vs10xx.cpp musicshield-lib/vs10xx.cpp
+--- music_v1_14/vs10xx.cpp	2010-09-03 10:40:04.000000000 -0700
++++ musicshield-lib/vs10xx.cpp	2013-01-27 13:01:33.322898526 -0800
+@@ -4,6 +4,7 @@
+  * \todo VS1003 WMA "wma-bytes-left" variable adjustment at ff/rew
+  */
+ 
++#include "debug.h"
+ #include "vs10xx.h"
+ #include "filesys.h"
+ #include "storage.h"
+@@ -188,10 +189,9 @@
+   
+   /* Set clock register, doubler etc. */
+   Mp3WriteRegisterWithDelay(SPI_CLOCKF, 0xB8, 0x00); 
+-#if 1
+-  Serial.print("\r\nClockF:");
++#ifdef DEBUG
++  PRINT("\r\nClockF:");
+   Serial.println(Mp3ReadRegister(SPI_CLOCKF),HEX);
+-  
+ #endif
+   
+   delay(1);
+@@ -319,7 +319,10 @@
+ {
+   
+   /** How many sectors to send between ff/rew commands */
+-  
++#ifdef DEBUG
++    PRINT("PlayDiskSectors ");
++    Serial.println(nSectorsToPlay);
++#endif
+ 
+   //PrepareToReadDiskSector(sectorAddress.l);
+        SPCR = (1 << SPE) | (1 << MSTR);// //SPICLK=CPU/4
+@@ -327,8 +330,10 @@
+      
+   while (nSectorsToPlay--)
+   {
+-  
+-  
++#ifdef DEBUG
++    PRINT(".");
++#endif
++
+     AvailableProcessorTime();
+     
+ 
