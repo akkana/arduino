@@ -17,13 +17,20 @@ one dies, or so I can use the music shield for different applications.
 The shield hardware actually seems pretty nice (two pushbuttons and a
 multifunction button) aside from the annoying SD card limitation.
 Too bad about the software and documentation.
+Honestly, I recommend that you don't buy this shield.
+But if you already have one, I hope my code will be useful to you.
 
+Seeed has lots of different libraries for this shield, each of which
+supposedly works for one type of program but not for any others.
 The code here is mostly adapted from the Music v1 14.zip library
 at http://seeedstudio.com/wiki/File:Music_v1_14.zip (linked from
-the wiki page referenced above).
-The Seeed code says:
-<code>Copyright (c) 2010 Seedstudio.  All right reserved.</code>
-So I guess that means I can't share my version directly.
+the wiki page referenced above), which is the only one of their
+libraries I've managed to get working.
+
+Unfortunately, I can't release my working library directly.
+The Seeed library isn't released under an open license: the README says
+Copyright (c) 2010 Seedstudio.  All right reserved.
+So no one is allowed to make changes and redistribute the library.
 
 So instead, I'm distributing patches to turn their library
 into something that worked for me. I asked them if it would be
