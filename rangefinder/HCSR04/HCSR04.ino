@@ -1,11 +1,7 @@
 /* -*- c -*- */
 /*
  * Print the output of a sonar rangefinder by timing the PWM pulses
- * coming from the rangefinder, on digital pin 7.
- * A machine on the other end can read the serial output
- * and do something with it.
- *
- * In practice, the rangefinder returns values between about 30 and 50.
+ * coming from an HC-SR04 rangefinder.
  *
  * by Akkana Peck <http://shallowsky.com>
  * This is Free Software: share and enjoy under the terms of the
