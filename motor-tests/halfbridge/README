@@ -6,7 +6,7 @@ versus about $50 for an Arduino motor shield.
 So it's great for classrooms or any other situation where you need lots
 of motors controlled.
 
-Copy the HalfBridge folder into your sketchbook/lib, then use it
+Copy the HalfBridge folder into your sketchbook/libraries, then use it
 as shown in the halfbridge.ino applet.
 
 For wiring, see http://shallowsky.com/arduino/class/motors.html
