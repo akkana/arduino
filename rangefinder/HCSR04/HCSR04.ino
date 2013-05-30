@@ -2,10 +2,12 @@
 /*
  * Print the output of a sonar rangefinder by timing the PWM pulses
  * coming from an HC-SR04 rangefinder.
+ * Simpler alternative to the NewPing library,
+ * http://code.google.com/p/arduino-new-ping/
  *
- * by Akkana Peck <http://shallowsky.com>
+ * by Akkana Peck, http://shallowsky.com
  * This is Free Software: share and enjoy under the terms of the
- * GNU Public License.
+ * GNU Public License v2 or later.
  */
 
 int triggerPin = 7;
