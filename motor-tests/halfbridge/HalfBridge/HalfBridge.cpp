@@ -75,7 +75,9 @@ void Motor::setSpeed(int speed)
     // Now that we're going the right direction, set the real speed:
 #ifdef DEBUG
     Serial.print("Writing speed ");
-    Serial.println(speed);
+    Serial.print(speed);
+    Serial.print(" to pin ");
+    Serial.println(mEnablePin);
 #endif
     analogWrite(mEnablePin, abs(speed));
     mSpeed = speed;
