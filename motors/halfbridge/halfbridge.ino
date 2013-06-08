@@ -4,6 +4,8 @@
 
 #define DEBUG 1
 
+// Motor 0 has a speed control on pin 9, direction controls on pins 2 and 3.
+// Motor 1 uses 10 for speed control, 4 and 5 for direction.
 Motor motors[2] = { Motor(9, 2, 3), Motor(10, 4, 5) };
 
 #define FAST 230
@@ -37,6 +39,7 @@ void setup()
     Serial.println(" steps in program");
 #endif
 
+    // Long delay at the beginning, to allow time to unplug USB.
     delay(8000);
 }
 
