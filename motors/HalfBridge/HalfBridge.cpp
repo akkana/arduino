@@ -34,52 +34,75 @@ void Motor::init()
     digitalWrite(mLogicPins[1], LOW);
 }
 
-typedef class Motor Motor;
+#define DIFFSIGN(a, b) ((a >= 0) != (b >= 0))
 
-//#define DEBUG 1
+#define DEBUG 1
 
 //
 // Speed is between -255 and 255. Negative speed will reverse direction.
 //
 void Motor::setSpeed(int speed)
 {
+#ifdef DEBUG
+    Serial.print("Motor ");
+    Serial.print(mEnablePin);
+    Serial.print("::setSpeed ");
+    Serial.print(speed);
+    Serial.print(" (currently ");
+    Serial.print(mSpeed);
+    Serial.println(")");
+#endif
+
     if (speed == mSpeed)
         return;
 
+    // If we're changing to speed 0, no need to ramp down -- just quit.
+    if (speed == 0) {
+        digitalWrite(mLogicPins[0], LOW);
+        digitalWrite(mLogicPins[1], LOW);
+
+        analogWrite(mEnablePin, 0);
+        mSpeed = 0;
+
+#ifdef DEBUG
+        Serial.print("Going to zero speed on pin ");
+        Serial.println(mEnablePin);
+#endif
+        return;
+    }
+
     // Are we changing direction?
-    if (speed * mSpeed < 0 || (speed != 0 && mSpeed == 0))
+    if (DIFFSIGN(speed, mSpeed) || (speed != 0 && mSpeed == 0))
     {
 #ifdef DEBUG
-    Serial.print("Changing speed/direction to ");
-    Serial.println(speed);
+        Serial.print("Changing speed/direction to ");
+        Serial.println(speed);
 #endif
         // Let the motor coast while we change direction:
-        digitalWrite(mEnablePin, LOW);
+        digitalWrite(mEnablePin, 0);
+        mSpeed = 0;
+        delay(50);
 
         // Set the direction: this is arbitrary, of course.
         // If you don't like it, swap motor wires.
-        if (speed == 0) {
-            digitalWrite(mLogicPins[0], LOW);
-            digitalWrite(mLogicPins[1], LOW);
-        }
-        else if (speed > 0) {
+        if (speed > 0) {
+#ifdef DEBUG
+            Serial.println("FORWARD");
+#endif
             digitalWrite(mLogicPins[0], HIGH);
             digitalWrite(mLogicPins[1], LOW);
         }
         else {
+#ifdef DEBUG
+            Serial.println("BACKWARD");
+#endif
             digitalWrite(mLogicPins[0], LOW);
             digitalWrite(mLogicPins[1], HIGH);
         }
     }
 
-    // Now that we're going the right direction, set the real speed:
-#ifdef DEBUG
-    Serial.print("Writing speed ");
-    Serial.print(speed);
-    Serial.print(" to pin ");
-    Serial.println(mEnablePin);
-#endif
     analogWrite(mEnablePin, abs(speed));
+
     mSpeed = speed;
 }
 
