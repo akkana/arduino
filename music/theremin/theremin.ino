@@ -3,7 +3,7 @@
  */
 
 // what digital pin is the speaker on? (other speaker wire is Gnd.)
-int SPEAKER = 10;
+int SPEAKER = 8;
 
 // which analog pin is the light sensor on?
 int LIGHTSENSOR = 0;
