@@ -50,7 +50,6 @@
 VERSION = 0.1
 
 # Standard Arduino libraries it will import, e.g. LiquidCrystal:
-#ARDLIBS = Servo
 ARDLIBS = Stepper
 
 # Local user-specified libraries (in ~/sketchbook/libraries/):
