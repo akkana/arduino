@@ -1,5 +1,4 @@
 /* -*- c -*- */
-#line 3
 
 /*
  * Arduino basic blink
