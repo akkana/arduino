@@ -5,7 +5,8 @@
 // what digital pin is the speaker on? (other speaker wire is Gnd.)
 int SPEAKER = 8;
 
-// which analog pin is the light sensor on?
+// Which digital pin is the light sensor on?
+// (The other speaker wire should connect to Gnd.)
 int LIGHTSENSOR = 0;
 
 // Typical photocell values for daytime with window and 1k resistor:
