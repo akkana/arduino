@@ -8,7 +8,7 @@
 import sys, serial, select
 
 class Arduino() :
-    def run(self, baud=9600) :
+    def run(self, baud=57600) :
         # Port may vary, so look for it:
         baseports = ['/dev/ttyUSB', '/dev/ttyACM']
         self.ser = None
