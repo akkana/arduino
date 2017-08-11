@@ -29,6 +29,7 @@ AccelStepper stepper(HALFSTEP, 7, 5, 6, 4);
 
 // Leaving these for LEDs and buttons:
 int buttonpin = 8;
+int rewindSwitch = 9;
 int LEDpins[] = { 10, 11, 12, 13 };
 
 // Is the button currently pressed?
@@ -101,35 +102,63 @@ void showMode()
     }
 }
 
+void startRewinding()
+{
+    Serial.print("Start rewinding");
+    rewinding = 1;
+    stepper.setSpeed(0);
+    delay(100);
+    stepper.setSpeed(calcSpeed());
+    Serial.print("Rewinding, Speed is ");
+    Serial.println(calcSpeed());
+}
+
+void stopRewinding()
+{
+    Serial.print("Stop rewinding");
+    rewinding = 0;
+    stepper.setSpeed(0);
+    delay(100);
+    stepper.setSpeed(calcSpeed());
+}
+
 void loop()
 {
-    /* If the button is pressed, increment mode and update the LEDs. */
-    int newBtnState = digitalRead(buttonpin);
-    if (newBtnState && !buttonState) {            // Press
-        buttonPressTime = millis();
-    }
-    else if (buttonState && !newBtnState) {       // Release
-        if (!rewinding) {
-            Serial.print("Incrementing mode to ");
-            Serial.println(++mode);
+    // Is the rewind switch on?
+    int rewindSwitchPressed = digitalRead(rewindSwitch);
+    // Serial.print("Rewind switch: ");
+    // Serial.println(rewindSwitchPressed);
+    if (rewindSwitchPressed && !rewinding)
+        startRewinding();
+
+    else if (rewinding && !rewindSwitchPressed)
+        stopRewinding();
+
+    // Don't bother checking button state if we're rewinding.
+    if (!rewinding) {
+        // If the button is pressed, increment mode and update the LEDs.
+        int newBtnState = digitalRead(buttonpin);
+        if (newBtnState && !buttonState) {            // Press
+            buttonPressTime = millis();
         }
-        buttonPressTime = 0;
-        rewinding = 0;
-        stepper.setSpeed(calcSpeed());
-    }
-    else if (buttonState && newBtnState && !rewinding) {        // Hold
-        int time = millis();
-        if (time - buttonPressTime > LONGPRESS) {
-            rewinding = 1;
+        else if (buttonState && !newBtnState) {       // Release
+            if (!rewinding) {
+                Serial.print("Incrementing mode to ");
+                Serial.println(++mode);
+            }
             buttonPressTime = 0;
-            stepper.setSpeed(0);
-            delay(100);
+            rewinding = 0;
             stepper.setSpeed(calcSpeed());
-            Serial.print("Rewinding, Speed is ");
-            Serial.println(calcSpeed());
         }
+        else if (buttonState && newBtnState && !rewinding) {        // Hold
+            int time = millis();
+            if (time - buttonPressTime > LONGPRESS) {
+                startRewinding();
+                buttonPressTime = 0;
+            }
+        }
+        buttonState = newBtnState;
     }
-    buttonState = newBtnState;
 
     showMode();
 
