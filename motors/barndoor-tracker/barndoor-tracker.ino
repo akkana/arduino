@@ -22,6 +22,12 @@
 #include <AccelStepper.h>
 
 #define HALFSTEP 8
+#define ONERPM   (4096/60)
+
+#define LONGPRESS 3000    // milliseconds
+
+#define REWIND_SPEED -900
+
 #define NUMLED (sizeof LEDpins / sizeof *LEDpins)
 
 // Plugging the ULN2003 board directly into the Arduino uses these pins:
@@ -35,10 +41,6 @@ int LEDpins[] = { 10, 11, 12, 13 };
 // Is the button currently pressed?
 int buttonState = 0;
 
-#define LONGPRESS 3000    // milliseconds
-
-#define REWIND_SPEED -900
-
 // When did the current button press start?
 // Holding the button for more than 3 seconds starts a rewind.
 int buttonPressTime = 0;
@@ -48,6 +50,9 @@ int rewinding = 0;
 
 /* Figure out what speed we should be driving, in steps per second,
  * according to the current mode.
+ * Incrementing mode increases speed by a little bit.
+ * If mode's high bit (mode & 8) is set,
+ * reduce speed rather than increasing it.
  */
 int calcSpeed()
 {
@@ -56,9 +61,15 @@ int calcSpeed()
     if (rewinding)
         speed = REWIND_SPEED;
 
-    else
-        speed = 4096/60 + mode * 5;
+    else if (mode & 8) {
+        speed = ONERPM - ((mode & 7) + 1) * 5;
+    }
 
+    else
+        speed = ONERPM + mode * 5;
+
+    Serial.print("Mode is ");
+    Serial.println(mode);
     Serial.print("Set speed to ");
     Serial.println(speed);
 
@@ -143,8 +154,9 @@ void loop()
         }
         else if (buttonState && !newBtnState) {       // Release
             if (!rewinding) {
-                Serial.print("Incrementing mode to ");
-                Serial.println(++mode);
+                mode = (mode + 1) & 0xf;
+                // Serial.print("Incrementing mode to ");
+                // Serial.println(mode);
             }
             buttonPressTime = 0;
             rewinding = 0;
