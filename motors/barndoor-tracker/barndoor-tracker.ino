@@ -21,6 +21,9 @@
 
 #include <AccelStepper.h>
 
+// DEBUGSERIAL must be undefined to use pins that include 0 and 1
+#undef DEBUGSERIAL
+
 #define HALFSTEP 8
 #define ONERPM   (4096/60)
 
@@ -30,8 +33,14 @@
 
 #define NUMLED (sizeof LEDpins / sizeof *LEDpins)
 
-// Plugging the ULN2003 board directly into the Arduino uses these pins:
-AccelStepper stepper(HALFSTEP, 7, 5, 6, 4);
+// Stepper pins should correspond with ULN2003's pins In1, In3, In2, In4.
+// Plugging the ULN2003 board directly into the Arduino, pointed out:
+//AccelStepper stepper(HALFSTEP, 7, 5, 6, 4);
+// Plugging the ULN2003 board directly into the Arduino, pointed in
+// (needs insulation else the extra pins might contact something):
+// Note, in this configuration, you can't use Serial for debugging,
+// because pins 0 and 1 are serial RX and TX.
+AccelStepper stepper(HALFSTEP, 0, 2, 1, 3);
 
 // Leaving these for LEDs and buttons:
 int buttonpin = 8;
@@ -68,17 +77,21 @@ int calcSpeed()
     else
         speed = ONERPM + mode * 5;
 
+#ifdef DEBUGSERIAL
     Serial.print("Mode is ");
     Serial.println(mode);
     Serial.print("Set speed to ");
     Serial.println(speed);
+#endif
 
     return (speed);
 }
 
 void setup()
 {
+#ifdef DEBUGSERIAL
     Serial.begin(9600);
+#endif
 
     stepper.setMaxSpeed(1000);
     stepper.setSpeed(calcSpeed());     // steps per second
@@ -103,7 +116,9 @@ void showMode()
 
     unsigned short bitmode = mode;
 
-    //Serial.println(bitmode);
+#ifdef DEBUGSERIAL
+    Serial.println(bitmode);
+#endif
     for (i=0; i<NUMLED; ++i) {
         if (bitmode & 1)
             digitalWrite(LEDpins[i], HIGH);
@@ -115,18 +130,26 @@ void showMode()
 
 void startRewinding()
 {
+#ifdef DEBUGSERIAL
     Serial.print("Start rewinding");
+#endif
+
     rewinding = 1;
     stepper.setSpeed(0);
     delay(100);
     stepper.setSpeed(calcSpeed());
+
+#ifdef DEBUGSERIAL
     Serial.print("Rewinding, Speed is ");
     Serial.println(calcSpeed());
+#endif
 }
 
 void stopRewinding()
 {
+#ifdef DEBUGSERIAL
     Serial.print("Stop rewinding");
+#endif
     rewinding = 0;
     stepper.setSpeed(0);
     delay(100);
@@ -137,8 +160,12 @@ void loop()
 {
     // Is the rewind switch on?
     int rewindSwitchPressed = digitalRead(rewindSwitch);
-    // Serial.print("Rewind switch: ");
-    // Serial.println(rewindSwitchPressed);
+
+#ifdef DEBUGSERIAL
+    Serial.print("Rewind switch: ");
+    Serial.println(rewindSwitchPressed);
+#endif
+
     if (rewindSwitchPressed && !rewinding)
         startRewinding();
 
@@ -155,8 +182,11 @@ void loop()
         else if (buttonState && !newBtnState) {       // Release
             if (!rewinding) {
                 mode = (mode + 1) & 0xf;
-                // Serial.print("Incrementing mode to ");
-                // Serial.println(mode);
+
+#ifdef DEBUGSERIAL
+                Serial.print("Incrementing mode to ");
+                Serial.println(mode);
+#endif
             }
             buttonPressTime = 0;
             rewinding = 0;
