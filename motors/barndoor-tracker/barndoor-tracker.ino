@@ -6,8 +6,8 @@
  * and unlike Stepper it supports half-step mode,
  * which is supposedly better for the 28BYJ-48 as well as being less jerky.
  *
- * The program also supports adjusting the speed, and rewinding, and
- * supports LEDs indicating current speed, for use when debugging rates.
+ * The program also supports multiple rates, both directions, and rewinding,
+ * and supports LEDs indicating current mode (rate + direction).
  */
 
 /* Step angles for the 28BYJ-48:
@@ -24,12 +24,39 @@
 // DEBUGSERIAL must be undefined to use pins that include 0 and 1
 #undef DEBUGSERIAL
 
+// How many signals have to be sent to the motor driver for half-step mode:
 #define HALFSTEP 8
-#define ONERPM   (4096/60)
+
+// Fudge factor for this specific mount's geometry.
+// This has to be tuned with field testing.
+// 1.82 was seeming fairly close for solar rate.
+// 1.7 is still a little too fast.
+#define FUDGE 1.8
+
+// 1 RPM on the drive gear (2 RPM on the stepper's output shaft):
+#define ONERPM   (FUDGE * 2. * 4096/60)
+
+// Special tracking rate multipliers:
+// http://www.ascom-standards.org/Help/Platform/html/T_ASCOM_DeviceInterface_DriveRates.htm
+/*
+driveSidereal     0    Sidereal tracking rate (15.041 arcseconds per second)
+driveLunar        1    Lunar tracking rate (14.685 arcseconds per second).
+driveSolar         2    Solar tracking rate (15.0 arcseconds per second).
+driveKing          3    King tracking rate (15.0369 arcseconds per second).
+*/
+#define SIDEREAL 1.0
+#define SOLAR    0.99727411741240609002
+#define LUNAR    0.97633136094674556213
+#define KING     0.99972741174124060900
+
+// Six speeds to cycle through:
+float modeSpeeds[] = { SIDEREAL * ONERPM, LUNAR * ONERPM, SOLAR * ONERPM,
+                       -SIDEREAL * ONERPM, -LUNAR * ONERPM, -SOLAR * ONERPM };
+int numModes = (sizeof modeSpeeds) / (sizeof *modeSpeeds);
 
 #define LONGPRESS 3000    // milliseconds
 
-#define REWIND_SPEED -900
+#define REWIND_SPEED 900
 
 #define NUMLED (sizeof LEDpins / sizeof *LEDpins)
 
@@ -59,32 +86,54 @@ int rewinding = 0;
 
 /* Figure out what speed we should be driving, in steps per second,
  * according to the current mode.
- * Incrementing mode increases speed by a little bit.
- * If mode's high bit (mode & 8) is set,
- * reduce speed rather than increasing it.
+ * If mode's high bit (mode & 8) is set, drive in the opposite direction.
+ * Also update the LED to show the mode.
  */
 int calcSpeed()
 {
-    int speed;
+    int bitmode = mode % numModes;
+    int speed = (int)(modeSpeeds[bitmode]);
+    unsigned int i;
 
-    if (rewinding)
-        speed = REWIND_SPEED;
-
-    else if (mode & 8) {
-        speed = ONERPM - ((mode & 7) + 1) * 5;
-    }
-
-    else
-        speed = ONERPM + mode * 5;
+    // Rewinding must be the opposite sign from the direction we're going:
+    if (rewinding) {
+        // All LEDs high:
+        for (i=0; i<NUMLED; ++i)
+            digitalWrite(LEDpins[i], HIGH);
 
 #ifdef DEBUGSERIAL
-    Serial.print("Mode is ");
-    Serial.println(mode);
-    Serial.print("Set speed to ");
+        Serial.println("Rewinding");
+#endif
+
+        if (speed > 0)
+            return -REWIND_SPEED;
+        else
+            return REWIND_SPEED;
+    }
+
+#ifdef DEBUGSERIAL
+    Serial.print("Mode = ");
+    Serial.print(bitmode);
+    Serial.print(", speed = ");
     Serial.println(speed);
 #endif
 
-    return (speed);
+    // Else get the mode from modeSpeeds[mode].
+    for (i=0; i<NUMLED; ++i) {
+        if (bitmode & 1)
+            digitalWrite(LEDpins[i], HIGH);
+        else
+            digitalWrite(LEDpins[i], LOW);
+        bitmode >>= 1;
+    }
+
+    // Whatever we just did, now light the high LED if speed is negative.
+    if (speed > 0)
+        digitalWrite(LEDpins[NUMLED-1], LOW);
+    else
+        digitalWrite(LEDpins[NUMLED-1], HIGH);
+
+    return speed;
 }
 
 void setup()
@@ -101,31 +150,6 @@ void setup()
         pinMode(LEDpins[i], OUTPUT);
 
     pinMode(buttonpin, INPUT);
-}
-
-/* Show the mode on the four LEDs, as a binary number. */
-void showMode()
-{
-    unsigned int i;
-
-    if (rewinding) {
-        for (i=0; i<NUMLED; ++i)
-            digitalWrite(LEDpins[i], HIGH);
-        return;
-    }
-
-    unsigned short bitmode = mode;
-
-#ifdef DEBUGSERIAL
-    Serial.println(bitmode);
-#endif
-    for (i=0; i<NUMLED; ++i) {
-        if (bitmode & 1)
-            digitalWrite(LEDpins[i], HIGH);
-        else
-            digitalWrite(LEDpins[i], LOW);
-        bitmode >>= 1;
-    }
 }
 
 void startRewinding()
@@ -201,8 +225,6 @@ void loop()
         }
         buttonState = newBtnState;
     }
-
-    showMode();
 
     stepper.runSpeed();
 
