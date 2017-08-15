@@ -1,6 +1,5 @@
 /* Sunflower sketch: turn in the direction the light is brightest.
  */
-#line 3
 
 #include <Stepper.h>
 

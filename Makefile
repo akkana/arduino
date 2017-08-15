@@ -315,6 +315,7 @@ else
 applet/$(TARGET).cpp: $(TARGET).ino
 	test -d applet || mkdir applet
 	echo '#include "Arduino.h"' > applet/$(TARGET).cpp
+	echo '#line 1 "$(TARGET).ino"' >> applet/$(TARGET).cpp
 	cat $(TARGET).ino >> applet/$(TARGET).cpp
 	echo 'extern "C" void __cxa_pure_virtual() { while (1) ; }' >> applet/$(TARGET).cpp
 	cat $(ARDUINO_CORE)/main.cpp >> applet/$(TARGET).cpp
