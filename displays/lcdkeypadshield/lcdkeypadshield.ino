@@ -8,6 +8,15 @@ Mark Bramwell, July 2010
 
 ********************************************************/
 
+/*
+ * Akk note:
+ * The shield exposes digital buttons on the header at the upper right:
+ * 0 1 2 3 11 12 13
+ * It also exposes analog buttons at lower right:
+ * I haven't tested but I believe these are analog 1-5
+ * (analog 0 is used for the buttons).
+ */
+
 // select the pins used on the LCD panel
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
