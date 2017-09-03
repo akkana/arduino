@@ -50,20 +50,20 @@ driveKing          3    King tracking rate (15.0369 arcseconds per second).
 #define KING     0.99972741174124060900
 
 // Six speeds to cycle through:
-float modeSpeeds[] = { SIDEREAL * ONERPM, LUNAR * ONERPM, SOLAR * ONERPM,
+float modeSpeeds[] = {  SIDEREAL * ONERPM,  LUNAR * ONERPM,  SOLAR * ONERPM,
                        -SIDEREAL * ONERPM, -LUNAR * ONERPM, -SOLAR * ONERPM };
 int numModes = (sizeof modeSpeeds) / (sizeof *modeSpeeds);
 
-#define LONGPRESS 3000    // milliseconds
-
 #define REWIND_SPEED 900
+
+#define LONGPRESS 3000    // milliseconds
 
 #define NUMLED (sizeof LEDpins / sizeof *LEDpins)
 
 // Stepper pins should correspond with ULN2003's pins In1, In3, In2, In4.
 // Plugging the ULN2003 board directly into the Arduino, pointed out:
 //AccelStepper stepper(HALFSTEP, 7, 5, 6, 4);
-// Plugging the ULN2003 board directly into the Arduino, pointed in
+// Plugging the ULN2003 board directly into the Arduino, pointed inward
 // (needs insulation else the extra pins might contact something):
 // Note, in this configuration, you can't use Serial for debugging,
 // because pins 0 and 1 are serial RX and TX.

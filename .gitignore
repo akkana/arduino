@@ -1,3 +1,5 @@
 applet
 *.pyc
 *.o
+applet
+build-*
