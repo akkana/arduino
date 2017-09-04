@@ -2,14 +2,13 @@
 #include <LiquidCrystal.h>
 
 /*******************************************************
-
 This program will test the LCD panel and the buttons
-Mark Bramwell, July 2010
-
+Based on a prograb by Mark Bramwell, July 2010
 ********************************************************/
 
 /*
  * Akk note:
+ * This is for a DF Robot LCD Keypad Shield.
  * The shield exposes digital buttons on the header at the upper right:
  * 0 1 2 3 11 12 13
  * It also exposes analog buttons at lower right:
