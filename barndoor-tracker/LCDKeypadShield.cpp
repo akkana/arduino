@@ -23,6 +23,11 @@ uint8_t LCDKeypadShield::btnLEFT   = 3;
 uint8_t LCDKeypadShield::btnSELECT = 4;
 uint8_t LCDKeypadShield::btnNONE   = 5;
 
+static long sBtnDownTime = 0;    // will be from millis()
+static bool sRewinding = false;
+
+#define LONGPRESS  2000    // milliseconds
+
 LCDKeypadShield::LCDKeypadShield(uint8_t rs, uint8_t enable,
                                  uint8_t d0, uint8_t d1,
                                  uint8_t d2, uint8_t d3)
@@ -70,13 +75,55 @@ unsigned int LCDKeypadShield::checkButtonState(unsigned int startmode)
 {
     unsigned short btn = read_LCD_buttons();
 
-    // Are we rewinding?
-    if (btn == btnSELECT) {
-#ifdef DEBUGSERIAL
-        Serial.println("shield: rewinding");
-#endif /* DEBUGSERIAL */
+    // Are we rewinding? Once we start rewinding, we'll continue
+    // until another button press cancels it.
+    if (sRewinding && (btn == btnNONE || btn == btnSELECT))
         return rewindMode(startmode);
+
+    if (btn == btnNONE) {
+        if (sBtnDownTime)
+            sBtnDownTime = 0;
+
+        // Otherwise, no button is pressed so don't change the mode.
+        return startmode;
     }
+
+    // A button has been pressed. We'll need to know the time.
+    long curtime = millis();
+
+    // Was it the rewind button, and if so, has it been held long enough
+    // to consider it a longpress?
+    if (btn == btnSELECT) {
+        if (sBtnDownTime == 0) {
+            sBtnDownTime = curtime;
+            return startmode;
+        }
+
+        if (curtime - sBtnDownTime >= LONGPRESS) {
+            sRewinding = true;
+            return rewindMode(startmode);
+        }
+    }
+
+    // Okay, it's not the rewind button. So cancel any rewind.
+    // And if we were rewinding, don't act on the button or advance the mode,
+    // just cancel the rewind.
+    if (sRewinding) {
+        sRewinding = false;
+        return startmode;
+    }
+
+    // Was a button pressed already?
+    // These buttons require debouncing.
+    if (sBtnDownTime > 0) {
+        // A button was already pressed, let's assume it's the same one
+        // and we already changed the mode.
+        return startmode;
+    }
+
+    // Now we know a button was pressed and it wasn't previously pressed.
+    // It's okay to act on this button.
+    sBtnDownTime = curtime;
 
     if (btn == btnLEFT) {
         sBrightness -= BRIGHTNESS_CHANGE;
@@ -94,15 +141,12 @@ unsigned int LCDKeypadShield::checkButtonState(unsigned int startmode)
         return startmode;
     }
 
-    if (btn != btnDOWN)
-        return startmode;
+    if (btn == btnDOWN)
+        // The DOWN button is pressed. Advance the mode, skipping rewind modes.
+        return nextMode(startmode);
 
-#ifdef DEBUGSERIAL
-    Serial.println("shield checkButtonState: buttonDown is pressed");
-#endif /* DEBUGSERIAL */
-
-    // The DOWN button is pressed. Advance the mode, skipping rewind modes.
-    return nextMode(startmode);
+    // It was some other button, so ignore it.
+    return startmode;
 }
 
 // Is the switch-modes switch pressed?
@@ -129,14 +173,14 @@ void LCDKeypadShield::showMode(unsigned int modeCode)
     Serial.println(")");
 #endif /* DEBUGSERIAL */
 
-    snprintf(line, 16, "%d: %-16s", modeCode, gSpeedModes[modeCode].name);
+    snprintf(line, 16, "%d: %-16s                ", modeCode, gSpeedModes[modeCode].name);
     setCursor(0, 0);
     print(line);
 #ifdef DEBUGSERIAL
     Serial.println(line);
 #endif /* DEBUGSERIAL */
 
-    snprintf(line, 16, "speed %d", gSpeedModes[modeCode].speed);
+    snprintf(line, 16, "speed %d                ", gSpeedModes[modeCode].speed);
     setCursor(0, 1);
     print(line);
 #ifdef DEBUGSERIAL
@@ -156,7 +200,7 @@ void LCDKeypadShield::showMode(unsigned int modeCode, const char* extraString)
     Serial.println(")");
 #endif /* DEBUGSERIAL */
 
-    snprintf(line, 16, "%s %d",
+    snprintf(line, 16, "%s %d                ",
              gSpeedModes[modeCode].name, gSpeedModes[modeCode].speed);
     setCursor(0, 0);
     print(line);
@@ -165,7 +209,8 @@ void LCDKeypadShield::showMode(unsigned int modeCode, const char* extraString)
 #endif /* DEBUGSERIAL */
 
     setCursor(0, 1);
-    print(extraString);
+    snprintf(line, 16, "%16s", extraString);
+    print(line);
 #ifdef DEBUGSERIAL
     Serial.println(extraString);
 #endif /* DEBUGSERIAL */

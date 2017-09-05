@@ -51,6 +51,8 @@
 // Plugging the ULN2003 into the header on the DFRobot LCD Keypad Shield,
 // pointed out away from the Arduino:
 AccelStepper stepper(HALFSTEP, 13, 11, 12, 3);
+
+// We'll set the TrackerIO in setup(), either to a SimpleIO or LCDKeypadShield.
 TrackerIO *trackerIO = 0;
 
 #ifdef LCDKEYPADSHIELD
@@ -80,7 +82,7 @@ TrackerIO *trackerIO = 0;
 #define LONGPRESS 3000    // milliseconds
 
 // Are we in the middle of rewinding?
-static int sRewinding = 0;
+static bool sRewinding = false;
 
 // We'll update these two according to the state of the buttons:
 // Current mode goes from 0 to NUM_MODES*2: if it's >= NUM_MODES
@@ -127,7 +129,7 @@ void startRewinding(unsigned int mode)
     Serial.println("Start rewinding");
 #endif
 
-    sRewinding = 1;
+    sRewinding = true;
     stepper.setSpeed(0);
     delay(100);
     stepper.setSpeed(gSpeedModes[mode].speed);
@@ -138,12 +140,11 @@ void stopRewinding()
 #ifdef DEBUGSERIAL
     Serial.println("Stop rewinding");
 #endif
-    sRewinding = 0;
+    sRewinding = false;
     stepper.setSpeed(0);
     delay(100);
     stepper.setSpeed(gSpeedModes[sCurMode].speed);
 }
-
 
 void loop()
 {
@@ -158,8 +159,10 @@ void loop()
 
     if (newmode != sCurMode) {
         if (isRewindMode(newmode)) {
-            if (!sRewinding)
+            if (!sRewinding) {
                 startRewinding(newmode);
+                trackerIO->showMode(newmode);
+            }
             // else just go on rewinding but don't change anything
         }
         else {
@@ -178,14 +181,11 @@ void loop()
             Serial.print(", ");
             Serial.println(gSpeedModes[newmode].name);
 #endif
-        }
 
-        trackerIO->showMode(newmode);
+            trackerIO->showMode(newmode);
+        }
     }
 
     stepper.runSpeed();
 }
 
-#ifdef NOTDEF
-
-#endif

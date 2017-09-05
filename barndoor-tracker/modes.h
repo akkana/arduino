@@ -23,4 +23,4 @@ extern unsigned int nextMode(unsigned int mode);
 extern unsigned int rewindMode(unsigned int curmode);
 
 // Don't define DEBUGSERIAL if you're using pins 0 and 1 for anything.
-#define DEBUGSERIAL
+#undef DEBUGSERIAL
