@@ -33,30 +33,33 @@
 // Are we using the LCD keypad shield, or just simple LEDs?
 #define LCDKEYPADSHIELD
 
-// Don't define DEBUGSERIAL if you're using pins 0 and 1 for anything.
-#undef DEBUGSERIAL
-
 // How many signals have to be sent to the motor driver for half-step mode:
 #define HALFSTEP 8
 
 // Stepper pins should correspond with ULN2003's pins In1, In3, In2, In4.
+// Here are some common pin configurations:
+
 // Plugging the ULN2003 board directly into the Arduino, pointed out:
 //AccelStepper stepper(HALFSTEP, 7, 5, 6, 4);
+
 // Plugging the ULN2003 board directly into the Arduino, pointed inward
 // (needs insulation else the extra pins might contact something):
 // Note, in this configuration, you can't use Serial for debugging,
 // because pins 0 and 1 are serial RX and TX.
-AccelStepper stepper(HALFSTEP, 0, 2, 1, 3);
+//AccelStepper stepper(HALFSTEP, 0, 2, 1, 3);
 
+// Plugging the ULN2003 into the header on the DFRobot LCD Keypad Shield,
+// pointed out away from the Arduino:
+AccelStepper stepper(HALFSTEP, 13, 11, 12, 3);
 TrackerIO *trackerIO = 0;
 
 #ifdef LCDKEYPADSHIELD
 
-#include "LCDKeypadShield.h"
+#    include "LCDKeypadShield.h"
 
 #else // LCDKEYPADSHIELD
 
-#include "SimpleIO.h"
+#    include "SimpleIO.h"
 
 #endif // LCDKEYPADSHIELD
 
@@ -68,66 +71,24 @@ TrackerIO *trackerIO = 0;
 // This has to be tuned with field testing.
 // 1.82 was seeming fairly close for solar rate.
 // 1.7 is still a little too fast.
-#define FUDGE 1.8
+#define FUDGE 1.
 
 // 1 RPM on the drive gear (2 RPM on the stepper's output shaft):
 #define ONERPM   (FUDGE * 2. * 4096/60)
+#define REWIND_SPEED 900
 
 #define LONGPRESS 3000    // milliseconds
-
-// Is the button currently pressed?
-//static unsigned int gButtonState = 0;
 
 // Are we in the middle of rewinding?
 static int sRewinding = 0;
 
-// When did the current button press start?
-// Holding the button for more than 3 seconds starts a rewind.
-//static int gButtonPressTime = 0;
-
 // We'll update these two according to the state of the buttons:
 // Current mode goes from 0 to NUM_MODES*2: if it's >= NUM_MODES
 // then we're going backward.
-static unsigned int gCurMode = 1;
+static unsigned int sCurMode = 1;
 
-// gSpeedModes declared in modes.h:
-speedMode_t gSpeedModes[] = {
-    {                   -0.0, "Rewinding" },
-    {                    1.0, "Sidereal"  },
-    { 0.99727411741240609002, "Solar"     },
-    { 0.97633136094674556213, "Lunar"     },
-    { 0.99972741174124060900, "King"      }
-};
-
-/* Figure out what speed we should be driving, in steps per second,
- * according to the current mode.
- * If mode's high bit (mode & 8) is set, drive in the opposite direction.
- * Also update the LED to show the mode.
- *
- * This is only called when we change speeds, not every loop.
- */
-int calcSpeed(unsigned int mode)
-{
-    int curSpeed;
-
-    // Are we rewinding?
-    if (mode == 0)
-        curSpeed = REWIND_SPEED;
-    else if (mode == NUM_MODES)
-        curSpeed = -REWIND_SPEED;
-    else {
-        curSpeed = gSpeedModes[gCurMode].multiplier * ONERPM;
-        if (mode > NUM_MODES)
-            curSpeed = -curSpeed;
-    }
-
-#ifdef DEBUGSERIAL
-    Serial.print("speed = ");
-    Serial.println(curSpeed);
-#endif
-
-    return curSpeed;
-}
+// When we change speed, we'll save it, so TrackerIO classes can access it:
+unsigned gCurSpeed = 0;
 
 void setup()
 {
@@ -135,9 +96,8 @@ void setup()
     Serial.begin(9600);
 #endif
 
-    stepper.setMaxSpeed(1000);
-    stepper.setSpeed(calcSpeed(gCurMode));     // steps per second
-    //stepper.setAcceleration(50.);
+    // populate the speeds in gSpeedModes:
+    initSpeeds(ONERPM, REWIND_SPEED);
 
 #ifdef LCDKEYPADSHIELD
     // select the pins used on the LCD panel
@@ -148,7 +108,17 @@ void setup()
 #endif // LCDKEYPADSHIELD
 
     trackerIO->init();
-    trackerIO->showMode(gCurMode, gSpeedModes[gCurMode].name);
+    trackerIO->showMode(sCurMode);
+
+    stepper.setMaxSpeed(1000);
+    stepper.setSpeed(gSpeedModes[sCurMode].speed);     // steps per second
+    //stepper.setSpeed(50);
+    //stepper.setAcceleration(50.);
+
+#ifdef DEBUGSERIAL
+    Serial.print("Set motor speed: ");
+    Serial.println(gSpeedModes[sCurMode].speed);
+#endif
 }
 
 void startRewinding(unsigned int mode)
@@ -160,7 +130,7 @@ void startRewinding(unsigned int mode)
     sRewinding = 1;
     stepper.setSpeed(0);
     delay(100);
-    stepper.setSpeed(calcSpeed(mode));
+    stepper.setSpeed(gSpeedModes[mode].speed);
 }
 
 void stopRewinding()
@@ -171,27 +141,34 @@ void stopRewinding()
     sRewinding = 0;
     stepper.setSpeed(0);
     delay(100);
-    stepper.setSpeed(calcSpeed(gCurMode));
+    stepper.setSpeed(gSpeedModes[sCurMode].speed);
 }
+
 
 void loop()
 {
-    unsigned int newmode = trackerIO->checkButtonState(gCurMode);
+    unsigned int newmode = trackerIO->checkButtonState(sCurMode);
 
-    if (sRewinding && !REWINDING(newmode)) {
+    if (sRewinding && !isRewindMode(newmode)) {
         stopRewinding();
-        trackerIO->showMode(gCurMode, gSpeedModes[gCurMode].name);
+        trackerIO->showMode(sCurMode);
+        stepper.runSpeed();
+        return;
     }
 
-    if (newmode != gCurMode) {
-        if (REWINDING(newmode)) {
+    if (newmode != sCurMode) {
+        if (isRewindMode(newmode)) {
             if (!sRewinding)
                 startRewinding(newmode);
             // else just go on rewinding but don't change anything
         }
         else {
-            gCurMode = newmode;
-            int speed = calcSpeed(gCurMode);
+            sCurMode = newmode;
+            int speed = gSpeedModes[sCurMode].speed;
+#ifdef DEBUGSERIAL
+            Serial.print("Set motor speed: ");
+            Serial.println(speed);
+#endif
             stepper.setSpeed(speed);
 #ifdef DEBUGSERIAL
             Serial.print("Changed mode: ");
@@ -203,62 +180,12 @@ void loop()
 #endif
         }
 
-        trackerIO->showMode(newmode, gSpeedModes[newmode].name);
+        trackerIO->showMode(newmode);
     }
 
     stepper.runSpeed();
-
-    delay(1000);
 }
 
-#if 0
-void loop_old()
-{
-    trackerIO->checkButtonState(gCurState);
+#ifdef NOTDEF
 
-#ifdef DEBUGSERIAL
-    Serial.print("Rewind switch: ");
-    Serial.println(rewindSwitchPressed);
 #endif
-
-    if (rewindSwitchPressed && !sRewinding)
-        startRewinding();
-
-    else if (sRewinding && !rewindSwitchPressed)
-        stopRewinding();
-
-    // Don't bother checking button state if we're rewinding.
-    if (!sRewinding) {
-        // If the button is pressed, increment mode and update the LEDs.
-        if (newBtnState && !gButtonState) {            // Press
-            gButtonPressTime = millis();
-        }
-        else if (gButtonState && !newBtnState) {       // Release
-            if (!sRewinding) {
-                gCurMode = (gCurMode + 1) & 0xf;
-
-#ifdef DEBUGSERIAL
-                Serial.print("Incrementing mode to ");
-                Serial.println(gCurMode);
-#endif
-            }
-            gButtonPressTime = 0;
-            sRewinding = 0;
-            stepper.setSpeed(calcSpeed());
-        }
-        else if (gButtonState && newBtnState && !sRewinding) {        // Hold
-            int time = millis();
-            if (time - gButtonPressTime > LONGPRESS) {
-                startRewinding();
-                gButtonPressTime = 0;
-            }
-        }
-        gButtonState = newBtnState;
-    }
-
-    stepper.runSpeed();
-
-    delay(500);
-}
-#endif
-

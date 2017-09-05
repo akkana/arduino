@@ -39,31 +39,28 @@ unsigned int SimpleIO::checkButtonState(unsigned int startmode)
 {
     // Are we rewinding?
     if (rewindPressed()) {
-        if (startmode < NUM_MODES)
-            return 0;
-        else
-            return NUM_MODES;
+        return rewindMode(startmode);
     }
 
     // If nothing is pressed, don't change the mode:
     if (!modeSwitchPressed())
         return startmode;
 
-    // The mode button is pressed, so advance to the next mode --
-    // but not rewind.
-    if ((++startmode) % NUM_MODES == 0)
-        ++startmode;
-    startmode %= NUM_MODES * 2;
-    return startmode;
+    return nextMode(startmode);
 }
 
 // Show the mode:
-void SimpleIO::showMode(unsigned int modeCode, const char* const modeString)
+void SimpleIO::showMode(unsigned int modeCode, const char* const extraString)
+{
+    showMode(modeCode);
+}
+
+void SimpleIO::showMode(unsigned int modeCode)
 {
     int bitmode = modeCode;
     unsigned int i;
 
-    if (REWINDING(modeCode)) {
+    if (isRewindMode(modeCode)) {
         // All LEDs high:
         for (i=0; i < mNumLEDs; ++i)
             digitalWrite(mLEDPins[i], HIGH);

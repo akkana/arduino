@@ -23,7 +23,8 @@ public:
     virtual bool rewindPressed() = 0;
 
     // Show the mode:
-    virtual void showMode(unsigned int modeCode, const char* modeString) = 0;
+    virtual void showMode(unsigned int modeCode) = 0;
+    virtual void showMode(unsigned int modeCode, const char* extraString) = 0;
 };
 
 #endif // TrackerIO_h

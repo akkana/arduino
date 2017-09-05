@@ -28,7 +28,8 @@ public:
     bool rewindPressed();
 
     // Show the mode:
-    void showMode(unsigned int modeCode, const char* modeString);
+    void showMode(unsigned int modeCode);
+    void showMode(unsigned int modeCode, const char* extraString);
 };
 
 #endif /* SimpleIO_h */

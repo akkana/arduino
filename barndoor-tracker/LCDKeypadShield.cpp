@@ -12,7 +12,9 @@
 
 // define some values used by the panel and buttons
 
-static int brightness = 127;
+static int sBrightness = 127;
+#define BRIGHTNESS_CHANGE 25
+#define BRIGHTNESS_PIN    10
 
 uint8_t LCDKeypadShield::btnRIGHT  = 0;
 uint8_t LCDKeypadShield::btnUP     = 1;
@@ -31,7 +33,7 @@ LCDKeypadShield::LCDKeypadShield(uint8_t rs, uint8_t enable,
 void LCDKeypadShield::init()
 {
     begin(16, 2);              // start the library
-    analogWrite(10, brightness);
+    analogWrite(BRIGHTNESS_PIN, sBrightness);
     setCursor(0, 0);
     print("Hello, world"); // print a simple message
 }
@@ -70,36 +72,37 @@ unsigned int LCDKeypadShield::checkButtonState(unsigned int startmode)
 
     // Are we rewinding?
     if (btn == btnSELECT) {
-        if (startmode < NUM_MODES)
-            return 0;
-        else
-            return NUM_MODES;
+#ifdef DEBUGSERIAL
+        Serial.println("shield: rewinding");
+#endif /* DEBUGSERIAL */
+        return rewindMode(startmode);
     }
 
     if (btn == btnLEFT) {
-        brightness -= 10;
-        if (brightness < 10)
-            brightness == 10;
-        analogWrite(10, brightness);
+        sBrightness -= BRIGHTNESS_CHANGE;
+        if (sBrightness < 0)
+            sBrightness = 0;
+        analogWrite(BRIGHTNESS_PIN, sBrightness);
         return startmode;
     }
 
     if (btn == btnRIGHT) {
-        brightness += 10;
-        if (brightness > 255)
-            brightness == 255;
-        analogWrite(10, brightness);
+        sBrightness += BRIGHTNESS_CHANGE;
+        if (sBrightness > 255)
+            sBrightness = 255;
+        analogWrite(BRIGHTNESS_PIN, sBrightness);
         return startmode;
     }
 
     if (btn != btnDOWN)
         return startmode;
 
+#ifdef DEBUGSERIAL
+    Serial.println("shield checkButtonState: buttonDown is pressed");
+#endif /* DEBUGSERIAL */
+
     // The DOWN button is pressed. Advance the mode, skipping rewind modes.
-    if ((++startmode) % NUM_MODES == 0)
-        ++startmode;
-    startmode %= NUM_MODES * 2;
-    return startmode;
+    return nextMode(startmode);
 }
 
 // Is the switch-modes switch pressed?
@@ -116,13 +119,54 @@ bool LCDKeypadShield::rewindPressed()
 }
 
 // Show the mode:
-void LCDKeypadShield::showMode(unsigned int modeCode, const char* modeString)
+void LCDKeypadShield::showMode(unsigned int modeCode)
 {
     static char line[17];
-    snprintf(line, 16, "%-16s", "showMode: ");
+
+#ifdef DEBUGSERIAL
+    Serial.print("showMode(");
+    Serial.print(modeCode);
+    Serial.println(")");
+#endif /* DEBUGSERIAL */
+
+    snprintf(line, 16, "%d: %-16s", modeCode, gSpeedModes[modeCode].name);
     setCursor(0, 0);
     print(line);
-    snprintf(line, 16, "%-16s", modeString);
+#ifdef DEBUGSERIAL
+    Serial.println(line);
+#endif /* DEBUGSERIAL */
+
+    snprintf(line, 16, "speed %d", gSpeedModes[modeCode].speed);
     setCursor(0, 1);
     print(line);
+#ifdef DEBUGSERIAL
+    Serial.println(line);
+#endif /* DEBUGSERIAL */
+}
+
+void LCDKeypadShield::showMode(unsigned int modeCode, const char* extraString)
+{
+    static char line[17];
+
+#ifdef DEBUGSERIAL
+    Serial.print("showMode(");
+    Serial.print(modeCode);
+    Serial.print(", ");
+    Serial.print(extraString);
+    Serial.println(")");
+#endif /* DEBUGSERIAL */
+
+    snprintf(line, 16, "%s %d",
+             gSpeedModes[modeCode].name, gSpeedModes[modeCode].speed);
+    setCursor(0, 0);
+    print(line);
+#ifdef DEBUGSERIAL
+    Serial.println(line);
+#endif /* DEBUGSERIAL */
+
+    setCursor(0, 1);
+    print(extraString);
+#ifdef DEBUGSERIAL
+    Serial.println(extraString);
+#endif /* DEBUGSERIAL */
 }
