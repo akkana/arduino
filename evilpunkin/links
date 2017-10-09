@@ -1,0 +1,29 @@
+http://highlowtech.org/?p=1963
+
+Sample laugh in
+https://iot4kids.com/2014/10/21/easy-arduino-halloween-project-motion-sensing-pumpkin-with-an-evil-laugh/
+
+Parts list:
+
+Arduino
+HC-SR04 sonar rangefinder, also called a PING sensor
+ (or any other rangefinder or PIR motion detector you might prefer)
+speaker, with some way of connecting it to an arduino
+  (e.g. bare solid-core wires soldered to both terminals,
+  or a connector/plug if you want to get fancy)
+amp?
+power supply, e.g. 9v battery and plug
+
+Single transistor amps:
+https://bryanduxbury.com/2012/01/20/one-transistor-audio-amplifier-for-arduino-projects/
+https://forum.arduino.cc/index.php?topic=370964.0
+https://www.hackster.io/jwzumwalt/single-transistor-audio-amp-32033a
+
+(more complicated, basic but real class A amplifier circuits)
+https://forum.arduino.cc/index.php?topic=164436.0
+https://forum.arduino.cc/index.php?topic=338741.0
+http://hackaweek.com/hacks/?p=327
+https://forum.arduino.cc/index.php?topic=114094.0
+https://electronics.stackexchange.com/questions/174223/class-a-single-transistor-amplifier-with-2n3904
+http://rcarduino.blogspot.com/2012/08/adding-audio-to-arduino-projects.html
+  (Also see the part about the Audiono synth)
