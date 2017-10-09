@@ -76,7 +76,7 @@ TrackerIO *trackerIO = 0;
 #define FUDGE 1.
 
 // 1 RPM on the drive gear (2 RPM on the stepper's output shaft):
-#define ONERPM   (FUDGE * 2. * 4096/60)
+#define ONERPM   (FUDGE * 4096/60)
 #define REWIND_SPEED 900
 
 #define LONGPRESS 3000    // milliseconds
