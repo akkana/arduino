@@ -9,11 +9,11 @@
 
 int main (void)
 {
-    // set Data Direction on pin B to output:
-    DDRB = 0b00001000;   // or 0x8
+    // Set Data Direction on port B, pin 3 (also pin 3 on the IC) to output:
+    DDRB = 0b00001000;
     while (1) {
-        // set PB3 (pin 3 on the chip) high.
-        PORTB = 0b00001000;   // or 0x8
+        // set PB3 high
+        PORTB = 0b00001000;
         _delay_ms(50);
         // set PB3 low
         PORTB = 0b00000000;
