@@ -1,7 +1,8 @@
 // main.c
 //
-// Blink for ATtiny85.
-// Connect red LED at pin 2 (PB3)
+// Blink an ATtiny85.
+// Connect first LED at pin 2 (PB3)
+// Optionally, connect another one on PB2 and they'll alternate.
 //
 
 #include <avr/io.h>
@@ -9,14 +10,14 @@
 
 int main (void)
 {
-    // Set Data Direction on port B, pin 3 (also pin 3 on the IC) to output:
-    DDRB = 0b00001000;
+    // Set Data Direction to output on port B, pins 2 and 3:
+    DDRB = 0b00001100;
     while (1) {
         // set PB3 high
         PORTB = 0b00001000;
         _delay_ms(50);
         // set PB3 low
-        PORTB = 0b00000000;
+        PORTB = 0b00000100;
         _delay_ms(100);
     }
 
