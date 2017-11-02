@@ -11,8 +11,8 @@ ISP_PROG          = usbtiny
 F_CPU             = 1000000L
 
 # Arduino.mk says to do this:
-ARDUINO_VAR_PATH  = /home/akkana/sketchbook/hardware/arduino-tiny.core2/cores/tiny
-ARDUINO_CORE_PATH = /home/akkana/sketchbook/hardware/arduino-tiny.core2/cores/tiny
+ARDUINO_VAR_PATH  = ~/sketchbook/hardware/arduino-tiny.core2/cores/tiny
+ARDUINO_CORE_PATH = ~/sketchbook/hardware/arduino-tiny.core2/cores/tiny
 # but in practice, ~/ doesn't work for include paths so it fails
 # with Arduino.h not found. However, even substituting absolute paths
 # doesn't help, it just dies needing tc_build_options.h.
