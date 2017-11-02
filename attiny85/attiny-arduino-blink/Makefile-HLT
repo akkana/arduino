@@ -1,0 +1,19 @@
+# Try to use the high-low tech USBtiny core with sudar Makefile
+# https://github.com/sudar/Arduino-Makefile
+
+# Found HLT at https://github.com/damellis/attiny/archive/702aa287455f7e052cf94fd4949398fec0ef21b8.zip
+# referenced from https://raw.githubusercontent.com/damellis/attiny/ide-1.6.x-boards-manager/package_damellis_attiny_index.json
+# Referenced in turn from http://highlowtech.org/?p=1695
+# (which works if you use the IDE).
+
+# If you specify BOARD_TAG = attiny85, fails with:
+# avr-g++: error: missing device or architecture after ?-mmcu=?
+# If you specify what attinyHLT actually has in boards.txt,
+# BOARD_TAG         = attiny.menu.cpu.attiny85,
+# it fails with tons of errors in the Arduino core.
+
+ALTERNATE_CORE    = attinyHLT
+BOARD_TAG         = attiny.menu.cpu.attiny85
+ISP_PROG          = usbtiny
+
+include /usr/share/arduino/Arduino.mk
