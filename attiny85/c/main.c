@@ -15,10 +15,10 @@ int main (void)
     while (1) {
         // set PB3 high
         PORTB = 0b00001000;
-        _delay_ms(50);
+        _delay_ms(1000);
         // set PB3 low
         PORTB = 0b00000100;
-        _delay_ms(100);
+        _delay_ms(1000);
     }
 
     return 1;
