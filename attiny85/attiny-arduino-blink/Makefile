@@ -7,7 +7,6 @@
 
 ALTERNATE_CORE = attiny-damellis
 BOARD_TAG = ATtinyX5.menu.cpu.attiny85
-BOARD_SUB = attiny85
 F_CPU = 1000000L
 # If you make it 16000000L, delays will run 16x too long,
 # e.g. delay(100) will take 1.6 seconds.

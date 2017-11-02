@@ -14,7 +14,6 @@
 
 ALTERNATE_CORE    = attinyHLT
 BOARD_TAG         = attiny.menu.cpu.attiny85
-BOARD_SUB         = attiny85
 F_CPU             = 1000000L
 ISP_PROG          = usbtiny
 
