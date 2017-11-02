@@ -1,0 +1,20 @@
+# Makefile for https://github.com/rexxar-tc/arduino-tiny.core2
+# based on suggested instructions in Arduino.mk.
+# DOESN'T WORK.
+
+ALTERNATE_CORE    = arduino-tiny.core2
+BOARD_TAG         = attiny85at8
+ISP_PROG          = usbtiny
+
+# I suspect this will be needed even though Arduino.mk doesn't mention it:
+# all the other tiny cores need it.
+F_CPU             = 1000000L
+
+# Arduino.mk says to do this:
+ARDUINO_VAR_PATH  = /home/akkana/sketchbook/hardware/arduino-tiny.core2/cores/tiny
+ARDUINO_CORE_PATH = /home/akkana/sketchbook/hardware/arduino-tiny.core2/cores/tiny
+# but in practice, ~/ doesn't work for include paths so it fails
+# with Arduino.h not found. However, even substituting absolute paths
+# doesn't help, it just dies needing tc_build_options.h.
+
+include /usr/share/arduino/Arduino.mk
