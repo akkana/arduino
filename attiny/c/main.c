@@ -13,10 +13,10 @@ int main (void)
     // Set Data Direction to output on port B, pins 2 and 3:
     DDRB = 0b00001100;
     while (1) {
-        // set PB3 high
+        // set PB3 high, PB2 low
         PORTB = 0b00001000;
         _delay_ms(1000);
-        // set PB3 low
+        // set PB3 low, PB2 high
         PORTB = 0b00000100;
         _delay_ms(1000);
     }

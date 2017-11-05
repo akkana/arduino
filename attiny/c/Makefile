@@ -5,7 +5,7 @@ DEVICE      = attiny85
 
 # The internal oscillator is 8MHz but by default it's in "divide by 8"
 # mode, so it's actually 1MHz, not 8 as many tutorials imply.
-CLOCK      = 1000000    # 1 MHz
+CLOCK      = 1000000        # 1 MHz
 PROGRAMMER = -c usbtiny
 OBJECTS    = main.o
 # for ATTiny85
