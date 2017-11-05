@@ -1,15 +1,13 @@
 # Arduino Makefile. Refer to https://github.com/sudar/Arduino-Makefile
 
 # Arduino core from https://github.com/damellis/attiny/
-
-# This works, but delay times are about a factor of 14 off.
-# A delay(100) actually lasts about 1.4 seconds.
+# WARNING: This works with an older version of arduino-mk on Debian
+# and Arduino 1.8.4, but not with updated Arduino-Makefile and Arduino 1.8.5.
+# I'm leaving it here just because it did work once.
 
 ALTERNATE_CORE = attiny-damellis
 BOARD_TAG = ATtinyX5.menu.cpu.attiny85
 F_CPU = 1000000L
-# If you make it 16000000L, delays will run 16x too long,
-# e.g. delay(100) will take 1.6 seconds.
 ISP_PROG = usbtiny
 
 include /usr/share/arduino/Arduino.mk

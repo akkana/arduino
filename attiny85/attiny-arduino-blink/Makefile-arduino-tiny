@@ -1,22 +1,12 @@
-# Arduino Make file. Refer to https://github.com/sudar/Arduino-Makefile
+# Arduino Makefile. Refer to https://github.com/sudar/Arduino-Makefile
 
-# This one works, but delays are wrong: delay(500) actually takes about 3 sec.
-# From https://github.com/sudar/Arduino-Makefile/blob/master/Arduino.mk
-# arduino-tiny comes from https://code.google.com/archive/p/arduino-tiny/
-# and it has some files in the wrong place:
-# install it as ~/sketchbook/hardware/arduino-tiny, then:
-#   cd ~/sketchbook/hardware/arduino-tiny
-#   mv avr/* ./
-#   rmdir avr
-#   cp /Prospective\ Boards.txt boards.txt
+ARDUINO_DIR = /usr/local/share/arduino
 
-# Use make, then make ispload (not upload).
+ALTERNATE_CORE = tiny
+BOARD_TAG = attiny85at8
 
-ALTERNATE_CORE    = arduino-tiny
-ISP_PROG          = usbtiny
-BOARD_TAG         = attiny85at8
-# sudar's old instructions says these are needed but they aren't.
-# ARDUINO_VAR_PATH  = ~/sketchbook/hardware/arduino-tiny/cores/tiny
-# ARDUINO_CORE_PATH = ~/sketchbook/hardware/arduino-tiny/cores/tiny
+F_CPU = 1000000L
+ISP_PROG = usbtiny
 
-include /usr/share/arduino/Arduino.mk
+include /usr/local/share/Arduino-Makefile/Arduino.mk
+
