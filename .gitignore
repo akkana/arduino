@@ -3,3 +3,5 @@ applet
 *.o
 applet
 build-*
+*.elf
+*.hex
