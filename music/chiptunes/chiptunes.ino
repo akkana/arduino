@@ -53,7 +53,7 @@ void loop()
         len *= rand;
 
     tone(SPEAKER, (unsigned long)freq, len);
-    
+
     delay(len);
 }
 
