@@ -4,8 +4,10 @@
  * Thanks to timemage on #arduino for the solution!
  */
 
-static constexpr int INTx_CAPABLE_PIN = 3;  // configure for intx capable pin; would need to be 2 or 3 for an UNO
-static constexpr int TRIGGER_PIN      = 4;  // any gpio pin
+// Trigger pin can be any GPIO pin.
+static constexpr int TRIGGER_PIN = 4;
+// Echo pin MUST BE an intx capable pin: 2 or 3 for an UNO
+static constexpr int ECHO_PIN = 3;
 
 using t_edge_counter = uint16_t;
 static volatile t_edge_counter g_edge_counter;
@@ -13,11 +15,18 @@ static volatile t_edge_counter g_edge_counter;
 static volatile uint32_t start_micros;
 static volatile uint32_t end_micros;
 
+// For debugging: save times of both highs and lows
+uint32_t lows[5];
+int low_i = 0;
+uint32_t highs[5];
+int high_i = 0;
+
 static void clear_edge_counter() {
   noInterrupts();
   g_edge_counter = 0;
 
   start_micros = end_micros = 0;
+  low_i = high_i = 0;
   interrupts();
 }
 
@@ -37,19 +46,36 @@ void edge_counter_isr() {
     end_micros = micros();
   }
   ++g_edge_counter;
+  if (digitalRead(ECHO_PIN))
+      highs[high_i++] = micros();
+  else
+      lows[low_i++] = micros();
 }
 
 static uint32_t get_micros_difference() {
   noInterrupts();
   uint32_t s = start_micros;
   uint32_t e = end_micros;
+  Serial.print("Lows: ");
+  int i;
+  for (i=0; i<low_i; ++i) {
+      Serial.print(lows[i]);
+      Serial.print(", ");
+  }
+  Serial.println();
+  Serial.print("Highs: ");
+  for (i=0; i<high_i; ++i) {
+      Serial.print(highs[i]);
+      Serial.print(", ");
+  }
+  Serial.println();
   interrupts();
 
   return e - s;
 }
 
 void setup() {
-  pinMode(INTx_CAPABLE_PIN, INPUT);
+  pinMode(ECHO_PIN, INPUT);
 
   pinMode(TRIGGER_PIN, OUTPUT);
   digitalWrite(TRIGGER_PIN, HIGH);
@@ -58,7 +84,7 @@ void setup() {
   Serial.begin(9600);
 
   attachInterrupt(
-    digitalPinToInterrupt(INTx_CAPABLE_PIN),
+    digitalPinToInterrupt(ECHO_PIN),
     edge_counter_isr,
     CHANGE
   );
@@ -77,11 +103,11 @@ void loop() {
   // that gives times that are considerably too long.
   //start_micros = micros();
 
-  delay(1000);
+  delay(5000);
 
-  Serial.print(F("1 second passed, counted "));
+  Serial.print(F("5 seconds passed, counted "));
   Serial.print(get_edge_counter());
-  Serial.println(F(" edges per second."));
+  Serial.println(F(" edges."));
   digitalWrite(TRIGGER_PIN, HIGH);
 
   uint32_t micdiff = get_micros_difference();
