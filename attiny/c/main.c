@@ -18,7 +18,7 @@ int main (void)
         _delay_ms(1000);
         // set PB3 low, PB2 high
         PORTB = 0b00000100;
-        _delay_ms(1000);
+        _delay_ms(500);
     }
 
     return 1;

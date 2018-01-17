@@ -1,3 +1,7 @@
+
+# Useful discussion of various ways of specifying alternate cores:
+# https://github.com/sudar/Arduino-Makefile/issues/121
+
 ARDUINO_DIR = /usr/local/share/arduino
 
 ALTERNATE_CORE = tiny
