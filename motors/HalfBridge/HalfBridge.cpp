@@ -6,7 +6,7 @@
 // The enable pin is the analog pin that controls the speed;
 // the logic pins control the direction; setting both to the
 // same value stops the motor.
-// 
+//
 
 // Represent each motor's speed as an integer between -255 and 255.
 // We'll map that into appropriate signals to send to the motor.
