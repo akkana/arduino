@@ -42,7 +42,7 @@ void setup() {
     FastLED.addLeds<NEOPIXEL, LED_PIN>(lightstring, NUM_LEDS);
 
     // start/stop button on 7, up on 8, down on 9.
-    speechtimer = new SpeechTimer(dpy, 1, 7, 8, 9, lightstring);
+    speechtimer = new SpeechTimer(dpy, 5, 7, 8, 9, lightstring);
 }
 
 void loop() {

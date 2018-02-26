@@ -202,11 +202,14 @@ void SpeechTimer::display2digits(unsigned int val, unsigned int leftdigit,
 
 int SpeechTimer::warningSeconds(int speechMinutes)
 {
+    // Very short speeches, give 30 seconds warning per light:
     if (speechMinutes < 3)
         return 30;
-    if (speechMinutes < 12)
+    // Up to 15 minutes, give one minute per light:
+    if (speechMinutes < 15)
         return 60;
-    return 180;
+    // 15 and above, give 2:30 per light
+    return 150;
 }
 
 void SpeechTimer::displayGoalTime()
