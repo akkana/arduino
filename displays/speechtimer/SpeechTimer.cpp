@@ -62,7 +62,7 @@ void SpeechTimer::showColor(unsigned int color, unsigned long nowMillis)
             setPixel(i, 0, BRIGHTNESS, 0);
 
         else if (color == ST_YELLOW)
-            setPixel(i, BRIGHTNESS * 1.1, BRIGHTNESS * .82, 0);
+            setPixel(i, BRIGHTNESS * 1.1, BRIGHTNESS * .75, 0);
 
         else if (color == ST_RED)
             setPixel(i, BRIGHTNESS, 0, 0);
