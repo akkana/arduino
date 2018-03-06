@@ -1,13 +1,20 @@
 /*
  * A green-yellow-red timer for short speeches, for instance, in Toastmasters.
- * Uses a MAX7219 8-digit 7-segment LED display.
  *
- * MAX7219 Wiring:
+ * MAX7219 8-digit 7-segment LED display Wiring:
  *   Vcc to Arduino 5V Pin
  *   GND to Arduino GND
  *   DIN to Arduino pin 12
  *   CS to Arduino pin 10
  *   CLK to Arduino pin 13
+ *
+ * Neopixel ring on pin 5
+ *
+ * start/stop button on 7, up on 8, down on 9.
+ * Buttons are inverted: normally high, pressed is low,
+ * using internal pullups.
+ * If using a rotary encoder, normally there's a path from the
+ * center pin through both outside pins
  */
 
 #include "SpeechTimer.h"
@@ -41,8 +48,10 @@ void setup() {
     delay(2000); // sanity delay
     FastLED.addLeds<NEOPIXEL, LED_PIN>(lightstring, NUM_LEDS);
 
-    // start/stop button on 7, up on 8, down on 9.
-    speechtimer = new SpeechTimer(dpy, 5, 7, 8, 9, lightstring);
+    // SpeechTimer with up/down buttons:
+    // speechtimer = new SpeechTimer(dpy, 5, 7, 8, 9, lightstring);
+    // SpeechTimer with rotary encoder for up/down:
+    speechtimer = new SpeechTimer(dpy, 5, 7, lightstring);
 }
 
 void loop() {

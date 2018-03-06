@@ -13,6 +13,9 @@
 #define ST_RED         3
 #define ST_BRIGHTRED   4
 
+// Value for an undefined pin:
+#define ST_NOPIN     999
+
 class SpeechTimer {
 
 protected:
@@ -33,6 +36,8 @@ protected:
     TimerButton* mUpBtn;
     TimerButton* mDownBtn;
 
+    int mOldEncPos;
+
     LedControl* mDpy;
 
     CRGB* mLightString;
@@ -51,6 +56,8 @@ protected:
     // up to 2.5 minutes for long speeches.
     int warningSeconds(int speechMinutes);
 
+    void updateGoalTime(int amt);
+
 public:
     // seg: the max7219 8-segment display.
     // startstoppin: Pin for the start/stop button (use internal pullup)
@@ -58,8 +65,8 @@ public:
     // lightstring: some sort of FastLED object
     SpeechTimer(LedControl* dpy, unsigned int minutes,
                 unsigned int startstoppin,
-                unsigned int uppin, unsigned int downpin,
-                CRGB* lightstring);
+                CRGB* lightstring,
+                unsigned int uppin = ST_NOPIN, unsigned int downpin = ST_NOPIN);
 
     // Call this for each tick of the clock, perhaps from loop().
     void tick();

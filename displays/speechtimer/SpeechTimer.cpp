@@ -1,13 +1,15 @@
 #include "SpeechTimer.h"
 
+#include "rotary-encoder.h"
+
 #define BRIGHTNESS 40
 #define NUM_LEDS    7
 #define FRAMES_PER_SECOND 15  // 60
 
 SpeechTimer::SpeechTimer(LedControl* dpy, unsigned int minutes,
                          unsigned int startstoppin,
-                         unsigned int uppin, unsigned int downpin,
-                         CRGB* lightstring)
+                         CRGB* lightstring,
+                         unsigned int uppin, unsigned int downpin)
 {
     mDpy = dpy;
     mGoalMinutes = minutes;
@@ -15,8 +17,17 @@ SpeechTimer::SpeechTimer(LedControl* dpy, unsigned int minutes,
 
     // Create the buttons:
     mStartBtn = new TimerButton(startstoppin);
-    mUpBtn = new TimerButton(uppin);
-    mDownBtn = new TimerButton(downpin);
+
+    // If up and down pins weren't specified, use a rotary encoder:
+    if (uppin == ST_NOPIN || downpin == ST_NOPIN) {
+        mUpBtn = 0;
+        mDownBtn = 0;
+        initRotaryEncoder();
+    }
+    else {
+        mUpBtn = new TimerButton(uppin);
+        mDownBtn = new TimerButton(downpin);
+    }
 
     mLightString = lightstring;
 
@@ -24,6 +35,8 @@ SpeechTimer::SpeechTimer(LedControl* dpy, unsigned int minutes,
     mGoalTime = 0;
 
     mElapsed = 0;
+
+    mOldEncPos = 0;
 
     displayGoalTime();
 
@@ -70,6 +83,15 @@ void SpeechTimer::showColor(unsigned int color, unsigned long nowMillis)
     FastLED.delay(1000 / FRAMES_PER_SECOND);
 }
 
+void SpeechTimer::updateGoalTime(int amt)
+{
+    mGoalMinutes += amt;
+    mWarningSecs = warningSeconds(mGoalMinutes);
+    if (mGoalMinutes < 1)
+        mGoalMinutes = 1;
+    displayGoalTime();
+}
+
 //
 // tick() is called a few times per second, whether or not we're timing.
 // It updates the display, checks the buttons and acts accordingly.
@@ -107,6 +129,11 @@ void SpeechTimer::tick()
             mElapsed = nowSecs - mStartTime;
             mStartTime = 0;
             mGoalTime = 0;
+
+            // In case someone spun the rotary encoder while the timer
+            // was running, ignore it.
+            if (!mUpBtn)
+                mOldEncPos = getRotaryPosition();
         }
 
         // else the clock is paused, so restart it.
@@ -118,17 +145,19 @@ void SpeechTimer::tick()
 
     // Check the up and down buttons, but only if the clock isn't running.
     if (!mStartTime) {
-        if (mUpBtn->checkPress(nowMillis)) {
-            ++mGoalMinutes;
-            mWarningSecs = warningSeconds(mGoalMinutes);
-            displayGoalTime();
+        if (!mUpBtn) {     // rotary encoder, not buttons
+            int encoderPos = getRotaryPosition();
+            if (encoderPos > mOldEncPos)
+                updateGoalTime(1);
+            else if (encoderPos < mOldEncPos)
+                updateGoalTime(-1);
+            mOldEncPos = encoderPos;
+        }
+        else if (mUpBtn->checkPress(nowMillis)) {
+            updateGoalTime(1);
         }
         else if (mDownBtn->checkPress(nowMillis)) {
-            --mGoalMinutes;
-            if (mGoalMinutes < 1)
-                mGoalMinutes = 1;
-            mWarningSecs = warningSeconds(mGoalMinutes);
-            displayGoalTime();
+            updateGoalTime(-1);
         }
     }
 
