@@ -10,7 +10,7 @@
  *
  * Neopixel ring on pin 5
  *
- * start/stop button on 7, up on 8, down on 9.
+ * start/stop button on 7, rotary encoder on 2 and 3.
  * Buttons are inverted: normally high, pressed is low,
  * using internal pullups.
  * If using a rotary encoder, normally there's a path from the
