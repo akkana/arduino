@@ -2,7 +2,10 @@
 
 #include "rotary-encoder.h"
 
-#define BRIGHTNESS 40
+// Brightness, as a percentage. 40 is good for debugging but for
+// something that can be seen across the room, brighter is better.
+#define BRIGHTNESS 80
+
 #define NUM_LEDS    7
 #define FRAMES_PER_SECOND 15  // 60
 

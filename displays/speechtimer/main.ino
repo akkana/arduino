@@ -24,7 +24,6 @@ LedControl* dpy = 0;
 SpeechTimer* speechtimer = 0;
 
 #define LED_PIN     5
-//#define BRIGHTNESS  200
 #define NUM_LEDS 7
 CRGB lightstring[NUM_LEDS];
 
@@ -38,7 +37,7 @@ void setup() {
     // The MAX72XX is in power-saving mode on startup, so wake it up.
     dpy->shutdown(0, false);
 
-    // Set the brightness to a medium values
+    // Set the LCD display's brightness to a medium values
     dpy->setIntensity(0, 8);
 
     // clear the display
