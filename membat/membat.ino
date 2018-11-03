@@ -47,7 +47,7 @@ int adc_key_in  = 0;
 #define BUZZER 3
 
 // What note to play?
-#define HIGHNOTE   4500
+#define HIGHNOTE   5500
 #define MEDNOTE   3000
 
 // This is for daylight use, no need for the backlight:
@@ -63,14 +63,14 @@ class Model
 {
 public:
     char mName[9];
-    unsigned long mAlarmTime;    // Minutes before we'll give an alarm
+    unsigned long mAlarmTime;    // Seconds before we'll give an alarm
     unsigned long mStartTime;    // Seconds since bootup when this model's clock started
     unsigned long mRunTime;      // How many seconds has this model run so far?
 
-    Model(const char* const name, int alarmtime);
+    Model(const char* const name, unsigned long alarmtime);
 };
 
-Model::Model(const char* const name, int alarmtime)
+Model::Model(const char* const name, unsigned long alarmtime)
 {
     sprintf(mName, "%-8s", name);
     mAlarmTime = alarmtime;
@@ -81,15 +81,25 @@ Model::Model(const char* const name, int alarmtime)
 // Hardwire models:
 Model* gModels[NUM_MODELS];
 
+
 /*****
- *  ADD YOUR PLANES HERE: name (8 chars max) and number of minutes.
+ *  ADD YOUR PLANES HERE: name (8 chars max) and number of seconds til alarm.
  */
+#define MINUTES * 60
 void initModels()
 {
-    gModels[0] = new Model("Skunk", 1);
-    gModels[1] = new Model("Wildwing", 8);
-    gModels[2] = new Model("IFO", 6);
-    gModels[3] = new Model("\0", 0);
+    int i = 0;
+
+    // Short timeout, for testing:
+    gModels[i++] = new Model("Test", 30);
+
+    // Real models:
+    gModels[i++] = new Model("Skunk", 6 MINUTES);
+    gModels[i++] = new Model("Wildwing", 8 MINUTES);
+    gModels[i++] = new Model("IFO", 6 MINUTES);
+
+    // End with at least one null model:
+    gModels[i++] = new Model("\0", 0);
 }
 
 // read the buttons
@@ -126,6 +136,7 @@ void debounce()
     noTone(BUZZER);
 }
 
+// Print mm:ss time string at the current LCD position.
 void printTime(long int secs)
 {
     char timestr[15];
@@ -139,9 +150,6 @@ void displayCurrentModelTime()
 {
     lcd.setCursor(0, 1);
     printTime(gModels[gCurModel]->mRunTime);
-    int uptime = millis() / 1000;
-    lcd.setCursor(10, 1);
-    lcd.print(uptime);
 }
 
 void displayCurrentModel()
@@ -149,7 +157,8 @@ void displayCurrentModel()
     lcd.setCursor(0, 0);
     lcd.print(gModels[gCurModel]->mName);
     lcd.setCursor(10, 0);          // move cursor to line 0, col 10
-    lcd.print(gModels[gCurModel]->mAlarmTime);
+    //lcd.print(gModels[gCurModel]->mAlarmTime / 60);
+    printTime(gModels[gCurModel]->mAlarmTime);
 
     displayCurrentModelTime();
 }
@@ -157,6 +166,30 @@ void displayCurrentModel()
 void setBrightness()
 {
     analogWrite(10, gBrightness);
+}
+
+void overtimeBuzzer()
+{
+    unsigned long mils = millis();
+    unsigned long oversecs = gModels[gCurModel]->mRunTime
+        - gModels[gCurModel]->mAlarmTime;
+
+    // Sound an obnoxious alarm for the first few seconds:
+    if (oversecs < 5)
+    {
+        if (mils % 500 < 250)
+            tone(BUZZER, MEDNOTE);
+        else
+            noTone(BUZZER);
+        return;
+    }
+
+    // But nobody could fly with that going on all the time,
+    // so tone it down to an occasional warning beep after that:
+    if (oversecs % 20 == 0 && mils % 500 < 200)
+        tone(BUZZER, MEDNOTE);
+    else
+        noTone(BUZZER);
 }
 
 void setup()
@@ -175,8 +208,7 @@ void setup()
 
 void loop()
 {
-    unsigned long mils = millis();           // milliseconds since power-up
-    unsigned long secs = mils / 1000;        // seconds since power-up
+    unsigned long secs = millis() / 1000;     // seconds since power-up
 
     unsigned int button = read_LCD_buttons();
 
@@ -243,13 +275,8 @@ void loop()
                 secs - gModels[gCurModel]->mStartTime;
             displayCurrentModelTime();
 
-            if (gModels[gCurModel]->mRunTime >
-                gModels[gCurModel]->mAlarmTime * 60) {
-                if (mils % 500 < 250)
-                    tone(BUZZER, MEDNOTE);
-                else
-                    noTone(BUZZER);
-            }
+            if (gModels[gCurModel]->mRunTime > gModels[gCurModel]->mAlarmTime)
+                overtimeBuzzer();
             break;
     }
 
