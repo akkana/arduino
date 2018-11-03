@@ -5,6 +5,19 @@
 #ifndef membat_h
 #define membat_h
 
+/************ A basic model definition *************/
+class Model
+{
+public:
+    char mName[9];
+    unsigned long mAlarmTime;    // Seconds before we'll give an alarm
+    unsigned long mStartTime;    // Seconds since bootup when this model's clock started
+    unsigned long mRunTime;      // How many seconds has this model run so far?
+
+    Model(const char* const name, unsigned long alarmtime);
+};
+
+/************ Input buttons *************/
 #define btnNONE      0
 #define btnSTARTSTOP 1
 #define btnSELECT    2
@@ -18,6 +31,24 @@
 // The important routine: check whether a button is pressed and
 // return the code for it.
 extern unsigned int read_buttons();
+
+/************ Display *************/
+class TimerDisplay
+{
+  public:
+    TimerDisplay();
+
+    // Utility routine: convert seconds to mm:ss
+    const char* timeString(long int secs);
+
+    // Override these methods in your subclass:
+    void displayCurrentModelTime(Model* curmodel);
+    void displayCurrentModel(Model* curmodel);
+
+    // Override this method if you support it.
+    // Pass 0-255.
+    void setBrightness(unsigned int bright);
+};
 
 #endif /* membat.h */
 

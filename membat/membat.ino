@@ -14,10 +14,7 @@
 
 #include "membat.h"
 
-#include <LiquidCrystal.h>
-
-// select the pins used on the LCD panel
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+#include "LCDTimerDisplay.h"
 
 // What pin is the passive piezo buzzer on?
 #define BUZZER 3
@@ -35,17 +32,6 @@ int gBrightness = 40;
 unsigned int gCurModel = 0;
 boolean gRunning = false;
 
-class Model
-{
-public:
-    char mName[9];
-    unsigned long mAlarmTime;    // Seconds before we'll give an alarm
-    unsigned long mStartTime;    // Seconds since bootup when this model's clock started
-    unsigned long mRunTime;      // How many seconds has this model run so far?
-
-    Model(const char* const name, unsigned long alarmtime);
-};
-
 Model::Model(const char* const name, unsigned long alarmtime)
 {
     sprintf(mName, "%-8s", name);
@@ -54,12 +40,12 @@ Model::Model(const char* const name, unsigned long alarmtime)
     mRunTime = 0;
 }
 
-// Hardwire models:
 Model* gModels[NUM_MODELS];
-
+LCDTimerDisplay display;
 
 /*****
  *  ADD YOUR PLANES HERE: name (8 chars max) and number of seconds til alarm.
+ *  Eventually it may be possible to add new ones in the field.
  */
 #define MINUTES * 60
 void initModels()
@@ -86,36 +72,18 @@ void debounce()
     noTone(BUZZER);
 }
 
-// Print mm:ss time string at the current LCD position.
-void printTime(long int secs)
+TimerDisplay::TimerDisplay()
 {
-    char timestr[15];
+}
+
+// Convert seconds to mm:ss
+const char* TimerDisplay::timeString(long int secs)
+{
+    static char timestr[15];
     unsigned int mins = secs / 60;
     secs = secs % 60;
     sprintf(timestr, "%2d:%02d  ", (int)mins, (int)secs);
-    lcd.print(timestr);
-}
-
-void displayCurrentModelTime()
-{
-    lcd.setCursor(0, 1);
-    printTime(gModels[gCurModel]->mRunTime);
-}
-
-void displayCurrentModel()
-{
-    lcd.setCursor(0, 0);
-    lcd.print(gModels[gCurModel]->mName);
-    lcd.setCursor(10, 0);          // move cursor to line 0, col 10
-    //lcd.print(gModels[gCurModel]->mAlarmTime / 60);
-    printTime(gModels[gCurModel]->mAlarmTime);
-
-    displayCurrentModelTime();
-}
-
-void setBrightness()
-{
-    analogWrite(10, gBrightness);
+    return timestr;
 }
 
 void overtimeBuzzer()
@@ -147,13 +115,11 @@ void setup()
     pinMode(BUZZER, OUTPUT);
     noTone(BUZZER);
 
-    lcd.begin(16, 2);              // start the library
-
     initModels();
 
-    setBrightness();
+    display.setBrightness(gBrightness);
 
-    displayCurrentModel();
+    display.displayCurrentModel(gModels[gCurModel]);
 }
 
 void loop()
@@ -189,7 +155,7 @@ void loop()
             ++gCurModel;
             if (gCurModel >= NUM_MODELS || gModels[gCurModel]->mAlarmTime == 0)
                 gCurModel = 0;
-            displayCurrentModel();
+            display.displayCurrentModel(gModels[gCurModel]);
             debounce();
             break;
 
@@ -198,7 +164,7 @@ void loop()
                 break;
             gModels[gCurModel]->mRunTime = 0;
             noTone(BUZZER);
-            displayCurrentModel();
+            display.displayCurrentModel(gModels[gCurModel]);
             debounce();
             break;
 
@@ -206,7 +172,7 @@ void loop()
             gBrightness += 30;
             if (gBrightness > 255)
                 gBrightness = 255;
-            setBrightness();
+            display.setBrightness(gBrightness);
             debounce();
             break;
 
@@ -214,7 +180,7 @@ void loop()
             gBrightness -= 30;
             if (gBrightness < 0)
                gBrightness = 0;
-            setBrightness();
+            display.setBrightness(gBrightness);
             debounce();
             break;
 
@@ -223,7 +189,7 @@ void loop()
                 break;
             gModels[gCurModel]->mRunTime =
                 secs - gModels[gCurModel]->mStartTime;
-            displayCurrentModelTime();
+            display.displayCurrentModelTime(gModels[gCurModel]);
 
             if (gModels[gCurModel]->mRunTime > gModels[gCurModel]->mAlarmTime)
                 overtimeBuzzer();

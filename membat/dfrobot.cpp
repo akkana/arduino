@@ -1,6 +1,6 @@
 
 /*
- * A membat button class for a DF Robot LCD Keypad Shield.
+ * A membat button handler for a DF Robot LCD Keypad Shield.
  *
  * The shield exposes digital buttons on the header at the upper right:
  * 0 1 2 3 11 12 13
