@@ -1,21 +1,21 @@
 /*
- * Global definitions for membat.
+ * A membat display using the DFrobot LCD button shield.
  */
 
-#ifndef LCDTimerDisplay_h
-#define LCDTimerDisplay_h
+#ifndef DFRobotTimerDisplay_h
+#define DFRobotTimerDisplay_h
 
 #include "membat.h"
 
 #include <LiquidCrystal.h>
 
-class LCDTimerDisplay : TimerDisplay
+class DFRobotTimerDisplay : TimerDisplay
 {
   private:
     LiquidCrystal lcd;
 
   public:
-    LCDTimerDisplay();
+    DFRobotTimerDisplay();
 
     // Overridden methods:
     void displayCurrentModelTime(Model* curmodel);
@@ -25,4 +25,4 @@ class LCDTimerDisplay : TimerDisplay
     void setBrightness(unsigned int bright);
 };
 
-#endif /* LCDTimerDisplay_h */
+#endif /* DFRobotTimerDisplay_h */

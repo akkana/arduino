@@ -10,6 +10,7 @@
  */
 
 #include "membat.h"
+#include "DFRobotButtons.h"
 
 #include <Arduino.h>
 
@@ -21,8 +22,12 @@
 int lcd_key     = 0;
 int adc_key_in  = 0;
 
+DFRobotButtons::DFRobotButtons()
+{
+}
+
 // read the buttons
-unsigned int read_buttons()
+unsigned int DFRobotButtons::read_buttons()
 {
     adc_key_in = analogRead(0);      // read the value from the sensor
     if (adc_key_in > 1000) return btnNONE;

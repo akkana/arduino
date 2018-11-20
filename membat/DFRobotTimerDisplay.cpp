@@ -2,22 +2,22 @@
  * Timer display on a 2x16 segment LCD
  */
 
-#include "LCDTimerDisplay.h"
+#include "DFRobotTimerDisplay.h"
 
 #include <Arduino.h>
 
-LCDTimerDisplay::LCDTimerDisplay() : lcd(8, 9, 4, 5, 6, 7)
+DFRobotTimerDisplay::DFRobotTimerDisplay() : lcd(8, 9, 4, 5, 6, 7)
 {
     lcd.begin(16, 2);              // start the library
 }
 
-void LCDTimerDisplay::displayCurrentModelTime(Model* curmodel)
+void DFRobotTimerDisplay::displayCurrentModelTime(Model* curmodel)
 {
     lcd.setCursor(0, 1);
     lcd.print(timeString(curmodel->mRunTime));
 }
 
-void LCDTimerDisplay::displayCurrentModel(Model* curmodel)
+void DFRobotTimerDisplay::displayCurrentModel(Model* curmodel)
 {
     lcd.setCursor(0, 0);
     lcd.print(curmodel->mName);
@@ -28,7 +28,7 @@ void LCDTimerDisplay::displayCurrentModel(Model* curmodel)
     displayCurrentModelTime(curmodel);
 }
 
-void LCDTimerDisplay::setBrightness(unsigned int bright)
+void DFRobotTimerDisplay::setBrightness(unsigned int bright)
 {
     analogWrite(10, bright);
 }

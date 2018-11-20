@@ -18,6 +18,9 @@ public:
 };
 
 /************ Input buttons *************/
+
+// Which button to use for which function:
+// Let btnSELECT select models, btnUP and btnDOWN adjust alarm time.
 #define btnNONE      0
 #define btnSTARTSTOP 1
 #define btnSELECT    2
@@ -25,12 +28,15 @@ public:
 #define btnUP        4
 #define btnDOWN      5
 
-// Which button to use for which function:
-// Let btnSELECT select models, btnUP and btnDOWN adjust alarm time.
+class TimerButtons
+{
+  public:
+    TimerButtons();
 
-// The important routine: check whether a button is pressed and
-// return the code for it.
-extern unsigned int read_buttons();
+    // The important routine: check whether a button is pressed and
+    // return the code for it.
+    virtual unsigned int read_buttons() = 0;
+};
 
 /************ Display *************/
 class TimerDisplay
@@ -39,15 +45,15 @@ class TimerDisplay
     TimerDisplay();
 
     // Utility routine: convert seconds to mm:ss
-    const char* timeString(long int secs);
+    virtual const char* timeString(long int secs);
 
     // Override these methods in your subclass:
-    void displayCurrentModelTime(Model* curmodel);
-    void displayCurrentModel(Model* curmodel);
+    virtual void displayCurrentModelTime(Model* curmodel) = 0;
+    virtual void displayCurrentModel(Model* curmodel) = 0;
 
     // Override this method if you support it.
     // Pass 0-255.
-    void setBrightness(unsigned int bright);
+    virtual void setBrightness(unsigned int bright);
 };
 
 #endif /* membat.h */

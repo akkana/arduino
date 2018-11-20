@@ -14,7 +14,8 @@
 
 #include "membat.h"
 
-#include "LCDTimerDisplay.h"
+#include "DFRobotTimerDisplay.h"
+#include "DFRobotButtons.h"
 
 // What pin is the passive piezo buzzer on?
 #define BUZZER 3
@@ -41,7 +42,8 @@ Model::Model(const char* const name, unsigned long alarmtime)
 }
 
 Model* gModels[NUM_MODELS];
-LCDTimerDisplay display;
+DFRobotTimerDisplay display;
+DFRobotButtons buttons;
 
 /*****
  *  ADD YOUR PLANES HERE: name (8 chars max) and number of seconds til alarm.
@@ -67,13 +69,9 @@ void initModels()
 void debounce()
 {
     tone(BUZZER, HIGHNOTE);
-    while (read_buttons() != btnNONE)
+    while (buttons.read_buttons() != btnNONE)
         ;
     noTone(BUZZER);
-}
-
-TimerDisplay::TimerDisplay()
-{
 }
 
 // Convert seconds to mm:ss
@@ -126,7 +124,7 @@ void loop()
 {
     unsigned long secs = millis() / 1000;     // seconds since power-up
 
-    unsigned int button = read_buttons();
+    unsigned int button = buttons.read_buttons();
 
     switch (button)
     {
