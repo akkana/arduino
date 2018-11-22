@@ -1,13 +1,13 @@
 # Arduino Makefile. Refer to https://github.com/sudar/Arduino-Makefile
 
-# ALTERNATE_CORE = breadboard
-
-# BOARD_TAG      = atmega328bb
-
 BOARD_TAG    = uno
 # BOARD_TAG    = diecimila
 # BOARD_TAG    = nano328
 # BOARD_SUB    = atmega328
+
+# For a breadboard arduino with internal clock, uncomment these two lines:
+# ALTERNATE_CORE = breadboard
+# BOARD_TAG      = atmega328bb
 
 # How to use the usbtinyisp to upload programs:
 ISP_PROG     = usbtiny
