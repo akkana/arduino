@@ -3,16 +3,19 @@
 /*
  * Arduino display test for a 16x1 LCD,
  * such as a Densitron 2, LM50 or GDM1601A.
- * For wiring see http://shallowsky.com/blog/hardware/surplus-lcd-arduino.html
+ * http://shallowsky.com/blog/hardware/surplus-lcd-arduino.html
+ *
+ * Wiring: set up so as to avoid the pins used for the ISP,
+ * to make it easier to use with a bare breadboard atmega328.
+ * 1st 3 pins on the display go to Gnd, 5v, Contrast pot.
+ * Next 3 go to pin 3, Gnd, pin 4.
+ * Then skip 4 pins, and the final 4 go to pins 5, 6, 7, 8.
  */
 
-// include the library code:
 #include <LiquidCrystal.h>
 
-// initialize the library with the numbers of the interface pins
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-// For tutorial at: http://www.ladyada.net/learn/lcd/charlcd.html
-//LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+// initialize the library with the numbers of the interface pins.
+LiquidCrystal lcd(3, 4, 5, 6, 7, 8);
 
 void clear()
 {
@@ -22,13 +25,17 @@ void clear()
     lcd.print("        ");
 }
 
-// https://forum.arduino.cc/index.php?topic=442583.0
+// The LiquidCrystal library doesn't work right with these single-line LCDs;
+// you have to trick them. Initialize as 16, 2 even though it's really 16x1;
+// then use lcd.setCursor(0, 0) for the first 8 characters,
+// lcd.setCursor(40, 0) for the second.
+// Thanks to: https://forum.arduino.cc/index.php?topic=442583.0
 void setup()
 {
     lcd.begin(16, 2);     // or lcd.begin(8,2);
 
     lcd.print("First8ch");
-    lcd.setCursor(40, 0); // Works for showing characters on the right half of GDM1601A controlled 16x1 LCD displays.
+    lcd.setCursor(40, 0);
     lcd.print("Last8ch.");
     delay(5000);
     clear();
