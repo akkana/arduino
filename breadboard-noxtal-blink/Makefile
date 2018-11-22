@@ -2,8 +2,8 @@
 
 # For a breadboard chip using internal clock:
 ARDUINO_DIR = /usr/local/share/arduino
-ALTERNATE_CORE = breadboard
 
+ALTERNATE_CORE = breadboard
 BOARD_TAG    = atmega328bb
 
 # BOARD_SUB isn't actually needed for atmega328.
