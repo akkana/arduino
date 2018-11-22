@@ -2,6 +2,9 @@
  * A membat buttons using the DFrobot LCD button shield.
  */
 
+#ifndef DFRobotButtons_h
+#define DFRobotButtons_h
+
 class DFRobotButtons : TimerButtons
 {
   public:
@@ -11,3 +14,5 @@ class DFRobotButtons : TimerButtons
     // return the code for it.
     unsigned int read_buttons();
 };
+
+#endif /* DFRobotButtons_h */

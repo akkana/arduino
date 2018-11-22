@@ -14,8 +14,27 @@
 
 #include "membat.h"
 
-#include "DFRobotTimerDisplay.h"
+/*
+ * Which type of buttons and display to use:
+ */
+#undef USE_DFROBOT
+#ifdef USE_DFROBOT
+
 #include "DFRobotButtons.h"
+#include "DFRobotTimerDisplay.h"
+
+DFRobotButtons buttons;
+DFRobotTimerDisplay display;
+
+#else
+
+#include "SimpleButtons.h"
+#include "ParallelLCDDisplay.h"
+
+SimpleButtons buttons(9, 10);
+ParallelLCDDisplay display(3, 4, 5, 6, 7, 8);
+
+#endif
 
 // What pin is the passive piezo buzzer on?
 #define BUZZER 3
@@ -42,8 +61,6 @@ Model::Model(const char* const name, unsigned long alarmtime)
 }
 
 Model* gModels[NUM_MODELS];
-DFRobotTimerDisplay display;
-DFRobotButtons buttons;
 
 /*****
  *  ADD YOUR PLANES HERE: name (8 chars max) and number of seconds til alarm.
