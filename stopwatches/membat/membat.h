@@ -36,6 +36,8 @@ class TimerButtons
     // The important routine: check whether a button is pressed and
     // return the code for it.
     virtual unsigned int read_buttons() = 0;
+
+    virtual void debounce();
 };
 
 /************ Display *************/

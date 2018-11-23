@@ -83,11 +83,10 @@ void initModels()
     gModels[i++] = new Model("\0", 0);
 }
 
-void debounce()
+void beepDebounce()
 {
     tone(BUZZER, HIGHNOTE);
-    while (buttons.read_buttons() != btnNONE)
-        ;
+    buttons.debounce();
     noTone(BUZZER);
 }
 
@@ -135,6 +134,12 @@ void setup()
     display.setBrightness(gBrightness);
 
     display.displayCurrentModel(gModels[gCurModel]);
+
+    Serial.begin(9600);
+    delay(500);
+    Serial.println("La la la");
+    /*
+    */
 }
 
 void loop()
@@ -142,6 +147,8 @@ void loop()
     unsigned long secs = millis() / 1000;     // seconds since power-up
 
     unsigned int button = buttons.read_buttons();
+    if (button != btnNONE)
+        Serial.println(button);
 
     switch (button)
     {
@@ -161,7 +168,7 @@ void loop()
                 noTone(BUZZER);
             }
 
-            debounce();
+            beepDebounce();
             break;
 
         case btnSELECT:
@@ -171,7 +178,7 @@ void loop()
             if (gCurModel >= NUM_MODELS || gModels[gCurModel]->mAlarmTime == 0)
                 gCurModel = 0;
             display.displayCurrentModel(gModels[gCurModel]);
-            debounce();
+            beepDebounce();
             break;
 
         case btnCLEAR:
@@ -180,7 +187,7 @@ void loop()
             gModels[gCurModel]->mRunTime = 0;
             noTone(BUZZER);
             display.displayCurrentModel(gModels[gCurModel]);
-            debounce();
+            beepDebounce();
             break;
 
         case btnUP:
@@ -188,7 +195,7 @@ void loop()
             if (gBrightness > 255)
                 gBrightness = 255;
             display.setBrightness(gBrightness);
-            debounce();
+            beepDebounce();
             break;
 
         case btnDOWN:
@@ -196,7 +203,7 @@ void loop()
             if (gBrightness < 0)
                gBrightness = 0;
             display.setBrightness(gBrightness);
-            debounce();
+            beepDebounce();
             break;
 
         case btnNONE:
@@ -210,6 +217,4 @@ void loop()
                 overtimeBuzzer();
             break;
     }
-
-    delay(20);
 }
