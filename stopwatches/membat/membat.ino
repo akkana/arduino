@@ -37,7 +37,7 @@ ParallelLCDDisplay display(3, 4, 5, 6, 7, 8);
 #endif
 
 // What pin is the passive piezo buzzer on?
-#define BUZZER 3
+#define BUZZER 2
 
 // What note to play?
 #define HIGHNOTE   5500
@@ -85,8 +85,9 @@ void initModels()
 
 void beepDebounce()
 {
-    tone(BUZZER, HIGHNOTE);
     buttons.debounce();
+    tone(BUZZER, HIGHNOTE);
+    delay(80);
     noTone(BUZZER);
 }
 
